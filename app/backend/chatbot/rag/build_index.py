@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import shutil
+import os
 from pathlib import Path
 from typing import Iterable, List
 
@@ -15,7 +16,10 @@ RAG_DIR = CURRENT_FILE.parent
 DOCS_DIR = RAG_DIR / "docs"
 VECTOR_DB_DIR = RAG_DIR / "vector_db"
 
-EMBEDDING_MODEL_NAME = "BAAI/bge-m3"
+EMBEDDING_MODEL_NAME = os.getenv(
+    "RAG_EMBEDDING_MODEL",
+    "sentence-transformers/all-MiniLM-L6-v2",
+)
 COLLECTION_NAME = "masi_risk_rag"
 MAX_CHUNK_TOKENS = 200
 CHUNK_OVERLAP_TOKENS = 40
@@ -209,7 +213,7 @@ def build_rag_index(rebuild: bool = True) -> Chroma:
 
     embeddings = HuggingFaceEmbeddings(
         model_name=EMBEDDING_MODEL_NAME,
-        model_kwargs={"device": "cuda"},
+        model_kwargs={"device": os.getenv("RAG_EMBEDDING_DEVICE", "cpu")},
         encode_kwargs={"normalize_embeddings": True},
     )
 

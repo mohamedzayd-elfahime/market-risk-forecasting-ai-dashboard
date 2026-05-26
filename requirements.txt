@@ -15,3 +15,10 @@ pydantic
 optuna
 openpyxl
 python-multipart
+huggingface_hub
+langchain-core
+langchain-text-splitters
+langchain-chroma
+langchain-huggingface
+chromadb
+sentence-transformers

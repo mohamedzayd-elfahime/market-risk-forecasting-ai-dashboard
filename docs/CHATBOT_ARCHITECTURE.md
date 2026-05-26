@@ -108,12 +108,23 @@ out_of_scope      -> aucun contexte
 
 ## RAG
 
-Deux modes existent:
+Deux modes existent, avec `chroma` comme mode principal:
 
-- `markdown`: mode par defaut, rapide et deterministe, base sur les fichiers Markdown dans `backend/chatbot/rag/docs/`.
-- `chroma`: mode vectoriel optionnel avec embeddings Hugging Face et base Chroma locale.
+- `chroma`: mode vectoriel par defaut, avec embeddings Hugging Face et base Chroma locale.
+- `markdown`: mode de secours rapide et deterministe, base sur les fichiers Markdown dans `backend/chatbot/rag/docs/`.
 
-Le mode Markdown est adapte a une demo ou a une execution locale simple. Le mode Chroma peut etre reactive si une base vectorielle a ete construite.
+Le mode Chroma necessite une base vectorielle locale dans `backend/chatbot/rag/vector_db/`. Par defaut, les embeddings utilisent `sentence-transformers/all-MiniLM-L6-v2` sur CPU pour garder l'installation portable. Elle se reconstruit avec:
+
+```powershell
+cd app
+..\.venv\Scripts\python.exe -m backend.chatbot.rag.build_index
+```
+
+Le mode Markdown peut encore etre active explicitement pour du debug ou une demo legere:
+
+```powershell
+$env:RAG_RETRIEVER_BACKEND="markdown"
+```
 
 ## Contexte dashboard prioritaire
 

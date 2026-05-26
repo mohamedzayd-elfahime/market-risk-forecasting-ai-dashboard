@@ -40,10 +40,17 @@ Sur macOS/Linux, remplace le chemin Python par:
 ./.venv/bin/python -m pip install -r requirements.txt -r requirements-dev.txt
 ```
 
-Installation complete, avec les dependances optionnelles RAG vectoriel et Hugging Face:
+Installation complete, avec les dependances de test:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements-all.txt
+```
+
+Construire ou reconstruire l'index RAG vectoriel:
+
+```powershell
+cd app
+..\.venv\Scripts\python.exe -m backend.chatbot.rag.build_index
 ```
 
 ## Demarrer l'application
@@ -81,14 +88,17 @@ LLM_BACKEND=ollama
 OLLAMA_MODEL=qwen2.5:3b
 OLLAMA_BASE_URL=http://localhost:11434
 AUTO_START_OLLAMA=true
-RAG_RETRIEVER_BACKEND=markdown
+RAG_RETRIEVER_BACKEND=chroma
+RAG_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+RAG_EMBEDDING_DEVICE=cpu
 WARM_RAG_ON_STARTUP=false
 ```
 
-Le mode RAG `markdown` est le mode par defaut et ne demande pas de base vectorielle. Pour activer le backend `chroma` ou le fallback Hugging Face, installe aussi:
+Le mode RAG `chroma` est le mode par defaut. Il utilise la base vectorielle locale generee dans `app/backend/chatbot/rag/vector_db/`. Cette base est un artefact local ignore par Git; il faut la reconstruire apres un clone ou apres modification des documents RAG.
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements-optional.txt
+cd app
+..\.venv\Scripts\python.exe -m backend.chatbot.rag.build_index
 ```
 
 Si tu veux lancer Ollama manuellement:

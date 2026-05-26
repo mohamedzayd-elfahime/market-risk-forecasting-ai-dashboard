@@ -44,8 +44,8 @@ OLLAMA_NUM_GPU = _env_int("OLLAMA_NUM_GPU", 999)
 OLLAMA_TEMPERATURE = _env_float("OLLAMA_TEMPERATURE", 0.1)
 OLLAMA_TOP_P = _env_float("OLLAMA_TOP_P", 0.85)
 
-# Demo-friendly defaults: avoid loading the heavy Chroma embedding stack on startup.
-RAG_RETRIEVER_BACKEND = os.getenv("RAG_RETRIEVER_BACKEND", "markdown")
+# Vector RAG is the default production retrieval backend.
+RAG_RETRIEVER_BACKEND = os.getenv("RAG_RETRIEVER_BACKEND", "chroma")
 WARM_RAG_ON_STARTUP = _env_bool("WARM_RAG_ON_STARTUP", False)
 DASHBOARD_CONTEXT_BACKEND = os.getenv("DASHBOARD_CONTEXT_BACKEND", "fast")
 

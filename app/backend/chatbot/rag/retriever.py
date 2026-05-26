@@ -38,7 +38,10 @@ CURRENT_FILE = Path(__file__).resolve()
 RAG_DIR = CURRENT_FILE.parent
 VECTOR_DB_DIR = RAG_DIR / "vector_db"
 
-EMBEDDING_MODEL_NAME = "BAAI/bge-m3"
+EMBEDDING_MODEL_NAME = os.getenv(
+    "RAG_EMBEDDING_MODEL",
+    "sentence-transformers/all-MiniLM-L6-v2",
+)
 COLLECTION_NAME = "masi_risk_rag"
 MAX_RETURNED_CHUNK_TOKENS = 200
 
@@ -149,7 +152,8 @@ def load_embeddings(config: RetrieverConfig = RetrieverConfig()) -> HuggingFaceE
     except Exception as exc:
         raise RuntimeError(
             "Le backend RAG 'chroma' necessite langchain-huggingface. "
-            "Installe les dependances optionnelles ou utilise RAG_RETRIEVER_BACKEND=markdown."
+            "Installe les dependances runtime avec `pip install -r requirements.txt` "
+            "ou utilise RAG_RETRIEVER_BACKEND=markdown pour depanner."
         ) from exc
 
     try:
@@ -197,7 +201,8 @@ def load_vector_store(config: RetrieverConfig = RetrieverConfig()) -> Chroma:
     except Exception as exc:
         raise RuntimeError(
             "Le backend RAG 'chroma' necessite langchain-chroma. "
-            "Installe les dependances optionnelles ou utilise RAG_RETRIEVER_BACKEND=markdown."
+            "Installe les dependances runtime avec `pip install -r requirements.txt` "
+            "ou utilise RAG_RETRIEVER_BACKEND=markdown pour depanner."
         ) from exc
 
     ensure_vector_db_exists(config.vector_db_dir)

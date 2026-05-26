@@ -1,6 +1,0 @@
-huggingface_hub
-langchain-core
-langchain-chroma
-langchain-huggingface
-chromadb
-sentence-transformers
