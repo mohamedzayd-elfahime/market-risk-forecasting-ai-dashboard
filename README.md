@@ -146,6 +146,7 @@ Depuis `app/`:
 
 - [Architecture globale](docs/ARCHITECTURE.md)
 - [Architecture detaillee du chatbot](docs/CHATBOT_ARCHITECTURE.md)
+- [Diagrammes du systeme chatbot](docs/CHATBOT_DIAGRAMS.md)
 
 ## Notes de publication
 

@@ -42,6 +42,8 @@ backend/chatbot/response_guardrails.py
 
 ## Diagramme du flux
 
+Pour une vue visuelle complete, voir aussi [Diagrammes du systeme chatbot](CHATBOT_DIAGRAMS.md).
+
 ```mermaid
 flowchart TD
     A["Dashboard ou client API"] --> B["Route FastAPI /chat"]
