@@ -234,6 +234,7 @@ def build_statistical_backtest_context() -> str:
     lines = [
         f"Taux de violation observe : {_fmt_pct(statistical.get('violation_rate'))}.",
         f"Niveau de violation attendu : {_fmt_pct(statistical.get('expected_violation_rate'))}.",
+        "Precision importante : le niveau de violation attendu est le taux theorique attendu de violations VaR, pas une p-value.",
         f"Nombre de breaches VaR : {_fmt_int(statistical.get('n_var_breaches'))} sur {_fmt_int(statistical.get('n_observations'))} observations.",
         f"Test de Kupiec : statistique {_fmt_num(statistical.get('kupiec_pof_stat'))}, p-value {_fmt_num(statistical.get('kupiec_pof_p_value'))}.",
         (

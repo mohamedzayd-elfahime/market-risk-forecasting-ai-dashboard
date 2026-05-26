@@ -91,6 +91,19 @@ _HELP_DUMP_PATTERNS = (
     "drawdown",
 )
 
+_EXPECTED_VIOLATION_CONFUSION_PATTERNS = (
+    "expected violation rate est une p-value",
+    "expected violation rate est la p-value",
+    "expected violation rate correspond a la p-value",
+    "expected violation rate correspond a une p-value",
+    "niveau de violation attendu est une p-value",
+    "niveau de violation attendu est la p-value",
+    "niveau de violation attendu correspond a la p-value",
+    "taux de violation attendu est une p-value",
+    "taux de violation attendu est la p-value",
+    "taux de violation attendu correspond a la p-value",
+)
+
 
 # ---------------------------------------------------------------------------
 # Result dataclass
@@ -158,6 +171,22 @@ def _looks_like_help_context_dump(response: str) -> bool:
     return marker_count >= 3 or len(_extract_percentages(response)) >= 4
 
 
+def _has_expected_violation_confusion(response: str) -> bool:
+    normalized = _normalise(response)
+    if any(pattern in normalized for pattern in _EXPECTED_VIOLATION_CONFUSION_PATTERNS):
+        return True
+    expected_terms = (
+        "expected violation rate",
+        "niveau de violation attendu",
+        "taux de violation attendu",
+    )
+    return (
+        any(term in normalized for term in expected_terms)
+        and "p-value" in normalized
+        and any(link in normalized for link in ("correspond", " est ", "equivaut", "p value de kupiec"))
+    )
+
+
 # ---------------------------------------------------------------------------
 # Main validator
 # ---------------------------------------------------------------------------
@@ -203,6 +232,9 @@ def validate_response(response: str, context: str, intent: str, question: str = 
     # Rule 4 — VaR/ES confusion
     if any(pat in r_lower for pat in _VAR_ES_CONFUSION_PATTERNS):
         issues.append("var_es_confusion")
+
+    if intent == "backtest_query" and _has_expected_violation_confusion(response):
+        issues.append("expected_violation_rate_confusion")
 
     # Rule 5 — "indisponible" returned for a help request
     if intent == "help_request" and any(m in r_lower for m in _UNAVAILABLE_MARKERS):
@@ -264,6 +296,14 @@ def _build_correction(original_response: str, intent: str, issues: list[str]) ->
             "La VaR est un quantile de perte conditionnel ; "
             "l'Expected Shortfall (ES) mesure la perte moyenne au-delà de ce seuil."
         )
+
+    if "expected_violation_rate_confusion" in issues:
+        correction = (
+            "Correction : le niveau de violation attendu correspond au taux theorique attendu "
+            "de violations VaR pour le niveau alpha, pas a une p-value. "
+            "Les p-values sont celles des tests de Kupiec, de Christoffersen et du diagnostic ES."
+        )
+        return f"{original_response.strip()}\n\n{correction}"
 
     if "hallucinated_number" in issues:
         return original_response.strip()

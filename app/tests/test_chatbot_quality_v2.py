@@ -41,6 +41,13 @@ def test_response_policy_refuses_investment_advice_before_llm():
     assert "conseil" in policy.direct_answer.lower()
 
 
+def test_backtest_policy_forbids_expected_violation_pvalue_confusion():
+    policy = build_response_policy("explique le backtest", "backtest_query")
+    rendered = "\n".join(policy.forbidden_claims + policy.must_mention).lower()
+    assert "expected violation rate" in rendered
+    assert "not a p-value" in rendered
+
+
 def test_response_policy_controls_var_es_without_direct_answer():
     policy = build_response_policy("c'est quoi la VaR et l'ES ?", "definition_query")
     assert policy.allow_llm is True
@@ -82,6 +89,21 @@ def test_guardrails_detect_hallucinated_percentage():
     )
     assert not result.is_valid
     assert "hallucinated_number" in result.issues
+
+
+def test_guardrails_correct_expected_violation_rate_confusion_without_replacing_answer():
+    response = (
+        "Le backtest Expected Violation Rate est de 0.05, ce qui correspond a la p-value "
+        "du backtest Kupiec. Le test Kupiec reste acceptable."
+    )
+    corrected = apply_guardrails(
+        response=response,
+        context="Niveau de violation attendu : 5.00%. Test de Kupiec : p-value 0.9090.",
+        intent="backtest_query",
+        question="explique le backtest",
+    )
+    assert response in corrected
+    assert "pas a une p-value" in corrected
 
 
 def test_help_request_does_not_call_llm_or_dump_dashboard(monkeypatch):

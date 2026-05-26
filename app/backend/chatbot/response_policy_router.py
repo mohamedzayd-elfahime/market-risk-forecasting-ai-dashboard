@@ -60,9 +60,15 @@ def build_response_policy(question: str, intent: str) -> ResponsePolicy:
         return ResponsePolicy(
             mode="backtest",
             required_context=["backtest_context"],
-            forbidden_claims=["model is guaranteed", "future calibration is certain"],
+            forbidden_claims=[
+                "model is guaranteed",
+                "future calibration is certain",
+                "expected violation rate is a p-value",
+                "expected violation rate corresponds to Kupiec p-value",
+            ],
             must_mention=[
                 "violation rate",
+                "expected violation rate is the theoretical expected VaR violation rate, not a p-value",
                 "Kupiec",
                 "Christoffersen",
                 "ES diagnostic if available",
