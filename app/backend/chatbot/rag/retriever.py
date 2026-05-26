@@ -82,6 +82,13 @@ def get_device() -> str:
     return os.getenv("RAG_EMBEDDING_DEVICE", "cpu")
 
 
+def _env_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
 def validate_query(query: str) -> str:
     """
     Validate and clean the user query.
@@ -179,6 +186,7 @@ def load_embeddings(config: RetrieverConfig = RetrieverConfig()) -> HuggingFaceE
         model_kwargs={
             "device": device,
             "token": hf_token,
+            "local_files_only": _env_bool("RAG_LOCAL_FILES_ONLY", True),
         },
         encode_kwargs={
             "normalize_embeddings": True,

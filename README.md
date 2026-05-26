@@ -91,10 +91,13 @@ AUTO_START_OLLAMA=true
 RAG_RETRIEVER_BACKEND=chroma
 RAG_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 RAG_EMBEDDING_DEVICE=cpu
-WARM_RAG_ON_STARTUP=false
+RAG_LOCAL_FILES_ONLY=true
+WARM_RAG_ON_STARTUP=true
 ```
 
 Le mode RAG `chroma` est le mode par defaut. Il utilise la base vectorielle locale generee dans `app/backend/chatbot/rag/vector_db/`. Cette base est un artefact local ignore par Git; il faut la reconstruire apres un clone ou apres modification des documents RAG.
+
+Avec `WARM_RAG_ON_STARTUP=true`, FastAPI precharge le modele d'embedding et la base Chroma au demarrage. Le startup peut prendre un peu plus de temps, mais le premier message chatbot evite le cold start du retrieval. Avec `RAG_LOCAL_FILES_ONLY=true`, le runtime utilise le modele deja telecharge localement et n'appelle pas Hugging Face pendant le warmup.
 
 ```powershell
 cd app

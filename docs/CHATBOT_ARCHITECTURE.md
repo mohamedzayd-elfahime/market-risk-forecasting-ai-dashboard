@@ -120,6 +120,8 @@ cd app
 ..\.venv\Scripts\python.exe -m backend.chatbot.rag.build_index
 ```
 
+Au demarrage, `WARM_RAG_ON_STARTUP=true` precharge le modele d'embedding et ouvre la base Chroma en arriere-plan. Cela augmente legerement le cout du startup, mais evite que la premiere question chatbot paie le cold start du retriever. Au runtime, `RAG_LOCAL_FILES_ONLY=true` force l'utilisation du cache local du modele d'embedding pour eviter un appel reseau pendant le warmup.
+
 Le mode Markdown peut encore etre active explicitement pour du debug ou une demo legere:
 
 ```powershell

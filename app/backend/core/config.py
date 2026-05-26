@@ -46,7 +46,7 @@ OLLAMA_TOP_P = _env_float("OLLAMA_TOP_P", 0.85)
 
 # Vector RAG is the default production retrieval backend.
 RAG_RETRIEVER_BACKEND = os.getenv("RAG_RETRIEVER_BACKEND", "chroma")
-WARM_RAG_ON_STARTUP = _env_bool("WARM_RAG_ON_STARTUP", False)
+WARM_RAG_ON_STARTUP = _env_bool("WARM_RAG_ON_STARTUP", True)
 DASHBOARD_CONTEXT_BACKEND = os.getenv("DASHBOARD_CONTEXT_BACKEND", "fast")
 
 
