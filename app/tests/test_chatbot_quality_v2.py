@@ -98,6 +98,37 @@ def test_help_request_does_not_call_llm_or_dump_dashboard(monkeypatch):
     assert "christoffersen" not in answer
 
 
+def test_help_acceptance_starts_guided_forecast_without_llm(monkeypatch):
+    def fail_if_called(*args, **kwargs):
+        raise AssertionError("LLM should not be called for guided forecast start")
+
+    monkeypatch.setattr(chat_service, "generate_llm_answer", fail_if_called)
+    history = [
+        {
+            "role": "assistant",
+            "content": "Salut. Je peux t'aider a lire le dashboard MASI, analyser la prevision, la VaR, l'ES, le regime, le backtest ou la strategie.",
+        }
+    ]
+    response = chat_service.ask_masi_chatbot("d accord aide moi", conversation_history=history)
+    answer = response["answer"].lower()
+    assert response["intent"] == "forecast_query"
+    assert "on commence par la prevision" in answer
+    assert "var 5%" in answer
+    assert "christoffersen" not in answer
+    assert "sharpe" not in answer
+
+
+def test_stream_guided_forecast_is_single_final_delta(monkeypatch):
+    def fail_if_called(*args, **kwargs):
+        raise AssertionError("LLM stream should not be called for guided forecast start")
+
+    monkeypatch.setattr(chat_service, "generate_llm_answer_stream", fail_if_called)
+    events = list(chat_service.stream_masi_chatbot("oui aide moi"))
+    assert [event["type"] for event in events] == ["delta", "done"]
+    assert "On commence par la prevision" in events[0]["delta"]
+    assert events[0]["delta"] == events[1]["answer"]
+
+
 def test_guardrails_replace_repetitive_help_dump():
     repeated = (
         "Je suis ravi de vous aider avec le MASI Risk Dashboard. "

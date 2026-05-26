@@ -7,6 +7,7 @@ This module owns the chatbot turn pipeline. The stable public import path
 from __future__ import annotations
 
 import os
+import re
 import unicodedata
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -275,13 +276,114 @@ def _finalize_answer(answer: str, question: str, intent: str, validation_context
 
 def _should_start_guided_forecast(question: str, history: list[dict[str, str]]) -> bool:
     q = _normalize_text(question).strip(" !?.")
+    q_tokens = set(q.replace("'", " ").split())
     if q in {"commence", "vas-y", "vas y", "go", "start", "aide moi", "guide moi"}:
+        return True
+    if any(marker in q for marker in ("aide moi", "guide moi", "aide-moi")) and len(q.split()) <= 6:
+        return True
+    has_acceptance = bool(q_tokens & {"oui", "ok", "daccord", "d", "accord", "vas", "y"})
+    has_help = any(marker in q for marker in ("aide", "guide", "commence", "vas y", "vas-y"))
+    if has_acceptance and has_help and len(q.split()) <= 8:
         return True
     if q in {"oui", "ok", "d accord", "d'accord"}:
         recent = " ".join(item["content"] for item in history[-3:] if item["role"] == "assistant")
         normalized_recent = _normalize_text(recent)
         return "dashboard masi" in normalized_recent and "prevision 1 jour" in normalized_recent
     return False
+
+
+def _first_regex_group(text: str, patterns: tuple[str, ...]) -> str:
+    for pattern in patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+    return ""
+
+
+def _extract_guided_forecast_values(turn: ChatTurn) -> dict[str, str]:
+    source = "\n".join(
+        part for part in (turn.dashboard_state_context, turn.numeric_context, turn.validation_context) if part
+    )
+    return {
+        "horizon": _first_regex_group(
+            source,
+            (
+                r"horizon selectionne:\s*([^\n]+)",
+                r"horizon principal a\s*([0-9]+)\s*jour",
+                r"Pour l'horizon\s*([0-9]+)\s*jour",
+            ),
+        ),
+        "target_date": _first_regex_group(
+            source,
+            (
+                r"date cible:\s*([^\n]+)",
+                r"date cible est\s*([0-9]{4}-[0-9]{2}-[0-9]{2})",
+            ),
+        ),
+        "return": _first_regex_group(
+            source,
+            (
+                r"rendement prevu affiche:\s*([^\n]+)",
+                r"rendement prevu est\s*([-+]?\d+(?:[.,]\d+)?%)",
+            ),
+        ),
+        "var": _first_regex_group(
+            source,
+            (
+                r"VaR 5% affichee:\s*([^\n]+)",
+                r"VaR 5% est\s*([-+]?\d+(?:[.,]\d+)?%)",
+            ),
+        ),
+        "es": _first_regex_group(
+            source,
+            (
+                r"Expected Shortfall 5% affiche:\s*([^\n]+)",
+                r"ES 5% est\s*([-+]?\d+(?:[.,]\d+)?%)",
+            ),
+        ),
+        "regime": _first_regex_group(
+            source,
+            (
+                r"regime HMM affiche:\s*([^\n]+)",
+                r"regime courant est\s*([^.\n]+)",
+                r"Le regime estime est\s*([^.\n]+)",
+            ),
+        ),
+    }
+
+
+def _guided_forecast_answer(turn: ChatTurn) -> str:
+    values = _extract_guided_forecast_values(turn)
+    horizon = values["horizon"] or "1"
+    lines = [f"On commence par la prevision a {horizon} jour du dashboard MASI."]
+
+    facts = []
+    if values["target_date"]:
+        facts.append(f"date cible : {values['target_date']}")
+    if values["return"]:
+        facts.append(f"rendement prevu : {values['return']}")
+    if values["var"]:
+        facts.append(f"VaR 5% : {values['var']}")
+    if values["es"]:
+        facts.append(f"ES 5% : {values['es']}")
+    if values["regime"]:
+        facts.append(f"regime HMM : {values['regime']}")
+
+    if facts:
+        lines.append("Les valeurs cles sont : " + "; ".join(facts) + ".")
+    else:
+        lines.append(
+            "Je n'ai pas encore les valeurs exactes affichees dans le contexte de ce tour, "
+            "mais la lecture commence normalement par rendement prevu, VaR, ES et regime HMM."
+        )
+
+    lines.append(
+        "Lecture rapide : le rendement prevu donne la direction estimee, la VaR donne un seuil "
+        "conditionnel de perte, l'ES mesure la perte moyenne au-dela de ce seuil, et le regime HMM "
+        "decrit la volatilite plutot que la direction du marche."
+    )
+    lines.append("Ensuite, on peut verifier si le backtest confirme que ces mesures de risque sont bien calibrees.")
+    return "\n\n".join(lines)
 
 
 def _build_turn(
@@ -357,7 +459,8 @@ def ask_masi_chatbot(
     """Run one chatbot turn and return the API-compatible response dict."""
     turn, routed_context = _build_turn(question, conversation_history, current_dashboard_state, config)
 
-    direct = get_fallback_response(turn.intent, turn.question)
+    guided_start = _should_start_guided_forecast(turn.question, turn.cleaned_history)
+    direct = _guided_forecast_answer(turn) if guided_start else get_fallback_response(turn.intent, turn.question)
     if direct is not None:
         response = _response_payload(turn, direct)
     elif not turn.response_policy.allow_llm and turn.response_policy.direct_answer:
@@ -392,7 +495,8 @@ def stream_masi_chatbot(
     """Collect, repair and emit one final chatbot answer for SSE."""
     turn, routed_context = _build_turn(question, conversation_history, current_dashboard_state, config)
 
-    direct = get_fallback_response(turn.intent, turn.question)
+    guided_start = _should_start_guided_forecast(turn.question, turn.cleaned_history)
+    direct = _guided_forecast_answer(turn) if guided_start else get_fallback_response(turn.intent, turn.question)
     already_yielded = False
     if direct is not None:
         answer = direct
