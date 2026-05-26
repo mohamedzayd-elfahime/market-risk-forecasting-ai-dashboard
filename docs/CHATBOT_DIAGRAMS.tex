@@ -1,289 +1,447 @@
 \documentclass[11pt,a4paper,landscape]{article}
 
+% ------------------------------------------------------------
+% Encoding and language
+% ------------------------------------------------------------
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[french]{babel}
-\usepackage[a4paper,landscape,margin=1.25cm]{geometry}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ------------------------------------------------------------
+% Page layout
+% ------------------------------------------------------------
+\usepackage[
+  a4paper,
+  landscape,
+  left=1.2cm,
+  right=1.2cm,
+  top=1.55cm,
+  bottom=1.55cm,
+  headheight=15pt,
+  headsep=10pt,
+  footskip=14pt
+]{geometry}
+
+\usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tikz}
 \usepackage{enumitem}
 \usepackage{hyperref}
-\usetikzlibrary{arrows.meta,positioning,shapes.geometric,shapes.misc,fit,backgrounds}
+\usepackage{fancyhdr}
+
+\usetikzlibrary{
+  arrows.meta,
+  positioning,
+  shapes.geometric,
+  shapes.misc,
+  fit,
+  backgrounds,
+  calc
+}
 
 \hypersetup{
   colorlinks=true,
-  linkcolor=blue!60!black,
-  urlcolor=blue!60!black
+  linkcolor=blue!55!black,
+  urlcolor=blue!55!black
 }
 
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{4pt}
+\setlength{\parskip}{3pt}
+\renewcommand{\familydefault}{\sfdefault}
 
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{MASI Risk Engine -- Chatbot}
+\rhead{Architecture Diagrams}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\setlength{\headheight}{15pt}
+\setlength{\footskip}{14pt}
+
+% ------------------------------------------------------------
+% Colors
+% ------------------------------------------------------------
 \definecolor{AppGreen}{HTML}{D9EED3}
 \definecolor{ControlBlue}{HTML}{DCEBFF}
 \definecolor{RagYellow}{HTML}{FFF1C7}
 \definecolor{SafetyRed}{HTML}{FFDCDC}
 \definecolor{NeutralGray}{HTML}{F5F5F5}
+\definecolor{DarkLine}{HTML}{4A4A4A}
 
+% ------------------------------------------------------------
+% TikZ styles
+% ------------------------------------------------------------
 \tikzset{
   block/.style={
     rectangle,
-    rounded corners=2pt,
-    draw=black!65,
+    rounded corners=3pt,
+    draw=DarkLine,
+    line width=0.45pt,
     align=center,
+    text width=28mm,
     minimum height=10mm,
-    inner xsep=7pt,
-    inner ysep=5pt,
-    font=\small
+    inner xsep=5pt,
+    inner ysep=4pt,
+    font=\scriptsize
   },
-  app/.style={block, fill=AppGreen},
-  control/.style={block, fill=ControlBlue},
-  rag/.style={block, fill=RagYellow},
-  safety/.style={block, fill=SafetyRed},
-  neutral/.style={block, fill=NeutralGray},
+  wideblock/.style={
+    block,
+    text width=38mm
+  },
+  app/.style={
+    block,
+    fill=AppGreen
+  },
+  control/.style={
+    block,
+    fill=ControlBlue
+  },
+  rag/.style={
+    block,
+    fill=RagYellow
+  },
+  safety/.style={
+    block,
+    fill=SafetyRed
+  },
+  neutral/.style={
+    block,
+    fill=NeutralGray
+  },
   db/.style={
     cylinder,
     shape border rotate=90,
     aspect=0.25,
-    draw=black!65,
+    draw=DarkLine,
+    line width=0.45pt,
     fill=RagYellow,
     align=center,
-    minimum height=13mm,
-    minimum width=20mm,
-    font=\small
+    text width=25mm,
+    minimum height=12mm,
+    minimum width=22mm,
+    font=\scriptsize
   },
   decision/.style={
     diamond,
-    draw=black!65,
+    draw=DarkLine,
+    line width=0.45pt,
     fill=ControlBlue,
     align=center,
-    aspect=1.8,
-    inner sep=1pt,
-    font=\small
+    aspect=2.2,
+    text width=24mm,
+    inner sep=1.5pt,
+    font=\scriptsize
   },
-  arrow/.style={-{Latex[length=2.4mm]}, thick, draw=black!75},
-  dashedarrow/.style={-{Latex[length=2.4mm]}, thick, dashed, draw=black!60}
+  arrow/.style={
+    -{Latex[length=2.3mm]},
+    thick,
+    draw=black!70
+  },
+  dashedarrow/.style={
+    -{Latex[length=2.3mm]},
+    thick,
+    dashed,
+    draw=black!55
+  },
+  labeltxt/.style={
+    font=\scriptsize,
+    fill=white,
+    inner sep=1pt
+  },
+  desc/.style={
+    font=\small,
+    text width=0.88\textwidth,
+    align=left
+  }
 }
 
-\title{Diagrammes du systeme chatbot MASI Risk Engine}
+\title{\vspace*{-8mm}\textbf{MASI Risk Engine Chatbot Architecture Diagrams}}
 \author{}
 \date{}
 
 \begin{document}
-\maketitle
 
-\section{Vue globale du chatbot}
+\maketitle
+\vspace*{-10mm}
+
+% ============================================================
+\section*{1. Global Chatbot Flow}
+
+{\small
+This diagram summarizes the complete chatbot request path, from the dashboard UI to the FastAPI route, the chat orchestrator, contextual retrieval, local LLM generation, and final response validation.
+}
+
+\vspace{2mm}
 
 \begin{center}
-\resizebox{0.96\textwidth}{!}{%
-\begin{tikzpicture}[node distance=13mm and 13mm]
-  \node[neutral] (user) {Utilisateur};
-  \node[app, right=of user] (ui) {Dashboard web\\Chat panel};
+\resizebox{0.94\textwidth}{!}{%
+\begin{tikzpicture}[node distance=11mm and 12mm]
+
+  \node[neutral] (user) {User};
+  \node[app, right=of user] (ui) {Web dashboard\\Chat panel};
   \node[app, right=of ui] (api) {FastAPI\\\texttt{/chat/ask}\\\texttt{/chat/ask/stream}};
-  \node[app, right=of api] (service) {Chat service\\orchestrateur};
+  \node[app, right=of api] (service) {Chat service\\orchestrator};
 
-  \node[control, below=of service] (validate) {Validation\\question + historique};
-  \node[control, below left=of validate] (intent) {Embedding\\intent router};
-  \node[control, below=of validate] (policy) {Response policy};
-  \node[control, below right=of validate] (context) {Routed context\\builder};
+  \node[control, below=of service] (validate) {Question + history\\validation};
 
-  \node[rag, below left=of context] (dash) {Etat exact\\du dashboard};
-  \node[rag, below=of context] (numeric) {Contexte numerique\\forecast/backtest/metadata};
-  \node[rag, below right=of context] (rag) {RAG vectoriel\\Chroma};
+  \node[control, below left=12mm and 20mm of validate] (intent) {Embedding\\intent router};
+  \node[control, below=12mm of validate] (policy) {Response\\policy};
+  \node[control, below right=12mm and 20mm of validate] (context) {Routed context\\builder};
 
-  \node[app, below=24mm of policy] (prompt) {Prompt builder};
-  \node[decision, right=of prompt] (gate) {LLM\\autorise ?};
-  \node[safety, above right=of gate] (direct) {Reponse directe\\controlee};
-  \node[app, right=of gate] (llm) {Ollama local\\\texttt{qwen2.5:3b}};
-  \node[safety, right=of llm] (guard) {Repair\\+ guardrails};
-  \node[app, right=of guard] (payload) {Payload API};
+  \node[rag, below left=12mm and 16mm of context] (dash) {Exact dashboard\\state};
+  \node[rag, below=12mm of context] (numeric) {Numeric context\\forecast / backtest};
+  \node[db, below right=12mm and 16mm of context] (ragdb) {Vector RAG\\Chroma};
+
+  \node[app, below=26mm of policy] (prompt) {Prompt builder};
+  \node[decision, right=15mm of prompt] (gate) {LLM\\allowed?};
+
+  \node[safety, below=14mm of gate] (direct) {Controlled\\direct answer};
+  \node[app, right=16mm of gate] (llm) {Local Ollama\\\texttt{qwen2.5:3b}};
+  \node[safety, below=11mm of llm] (guard) {Answer repair\\+ guardrails};
+  \node[app, below=11mm of guard] (payload) {API payload};
 
   \draw[arrow] (user) -- (ui);
   \draw[arrow] (ui) -- (api);
   \draw[arrow] (api) -- (service);
   \draw[arrow] (service) -- (validate);
+
   \draw[arrow] (validate) -- (intent);
   \draw[arrow] (validate) -- (policy);
   \draw[arrow] (intent) -- (context);
+
   \draw[arrow] (context) -- (dash);
   \draw[arrow] (context) -- (numeric);
-  \draw[arrow] (context) -- (rag);
+  \draw[arrow] (context) -- (ragdb);
+
   \draw[arrow] (dash) -- (prompt);
   \draw[arrow] (numeric) -- (prompt);
-  \draw[arrow] (rag) -- (prompt);
+  \draw[arrow] (ragdb) -- (prompt);
   \draw[arrow] (policy) -- (prompt);
+
   \draw[arrow] (prompt) -- (gate);
-  \draw[arrow] (gate) -- node[above, font=\scriptsize] {non} (direct);
-  \draw[arrow] (gate) -- node[above, font=\scriptsize] {oui} (llm);
+  \draw[arrow] (gate) -- node[labeltxt, above] {yes} (llm);
+  \draw[arrow] (gate) -- node[labeltxt, right] {no} (direct);
+
   \draw[arrow] (llm) -- (guard);
   \draw[arrow] (guard) -- (payload);
   \draw[arrow] (direct) -| (payload);
-  \draw[arrow] (payload) |- (ui);
+
 \end{tikzpicture}%
 }
 \end{center}
+
 \clearpage
 
-\section{Construction de la base RAG vectorielle}
+% ============================================================
+\section*{2. Vector RAG Index Construction}
+
+{\small
+The fixed chatbot knowledge base is built offline from curated Markdown files. The documents are cleaned, split into overlapping chunks, embedded with a lightweight sentence-transformer, and persisted in a local Chroma vector database.
+}
+
+\vspace{2mm}
 
 \begin{center}
 \resizebox{0.96\textwidth}{!}{%
-\begin{tikzpicture}[node distance=14mm and 14mm]
-  \node[neutral] (cmd) {Commande\\\texttt{python -m backend.chatbot.rag.build\_index}};
-  \node[neutral, below=of cmd] (docs) {Documents Markdown\\\texttt{backend/chatbot/rag/docs}};
-  \node[app, right=of docs] (clean) {Nettoyage\\Markdown};
-  \node[app, right=of clean] (headers) {Split par titres\\\#, \#\#, \#\#\#};
-  \node[app, right=of headers] (chunks) {Child chunks\\200 tokens\\overlap 40};
-  \node[app, right=of chunks] (refine) {Refine\\chunks longs};
-  \node[control, right=of refine] (embed) {Embedding model\\all-MiniLM-L6-v2};
-  \node[control, right=of embed] (vectors) {Vecteurs\\normalises};
-  \node[db, right=of vectors] (db) {Chroma DB\\locale};
+\begin{tikzpicture}[node distance=15mm and 18mm]
+
+  \node[neutral, wideblock] (cmd) {Command\\\texttt{python -m}\\\texttt{backend.chatbot.rag.build\_index}};
+  \node[neutral, right=of cmd, wideblock] (docs) {Markdown documents\\\texttt{backend/chatbot/rag/docs}};
+  \node[app, right=of docs] (clean) {Markdown\\cleaning};
+  \node[app, right=of clean] (headers) {Header split\\\#, \#\#, \#\#\#};
+
+  \node[app, below=22mm of docs] (chunks) {Child chunks\\200 tokens\\overlap 40};
+  \node[app, right=of chunks] (refine) {Long chunk\\refinement};
+  \node[control, right=of refine, wideblock] (embed) {Embedding model\\\texttt{all-MiniLM-L6-v2}};
+  \node[control, right=of embed] (vectors) {Normalized\\vectors};
+  \node[db, right=of vectors] (db) {Local\\Chroma DB};
 
   \draw[arrow] (cmd) -- (docs);
   \draw[arrow] (docs) -- (clean);
   \draw[arrow] (clean) -- (headers);
-  \draw[arrow] (headers) -- (chunks);
+  \draw[arrow] (headers) |- (chunks);
   \draw[arrow] (chunks) -- (refine);
   \draw[arrow] (refine) -- (embed);
   \draw[arrow] (embed) -- (vectors);
   \draw[arrow] (vectors) -- (db);
+
 \end{tikzpicture}%
 }
 \end{center}
+
 \clearpage
 
-\section{Retrieval RAG pendant une question}
+% ============================================================
+\section*{3. Runtime RAG Retrieval}
+
+{\small
+At runtime, the intent router decides whether document retrieval is useful. If RAG is required, the user question is embedded and matched against the local Chroma database. Retrieved passages are then injected into the controlled prompt.
+}
+
+\vspace{2mm}
 
 \begin{center}
 \resizebox{0.96\textwidth}{!}{%
-\begin{tikzpicture}[node distance=14mm and 14mm]
-  \node[neutral] (question) {Question\\utilisateur};
-  \node[control, right=of question] (intent) {Intent\\detectee};
-  \node[decision, right=of intent] (route) {RAG\\requis ?};
-  \node[control, above right=of route] (embedq) {Embedding\\question};
-  \node[safety, below right=of route] (norag) {Pas de RAG\\contexte numerique};
-  \node[db, right=of embedq] (db) {Chroma\\vector\_db};
+\begin{tikzpicture}[node distance=12mm and 13mm]
+
+  \node[neutral] (question) {User\\question};
+  \node[control, right=of question] (intent) {Detected\\intent};
+  \node[decision, right=of intent] (route) {RAG\\needed?};
+
+  \node[control, above right=11mm and 14mm of route] (embedq) {Question\\embedding};
+  \node[safety, below right=11mm and 14mm of route] (norag) {No RAG\\numeric context};
+
+  \node[db, right=of embedq] (db) {Chroma\\\texttt{vector\_db}};
   \node[rag, right=of db] (search) {Similarity search\\top-k passages};
-  \node[rag, right=of search] (format) {Format passages\\source + section};
-  \node[app, below=of format] (prompt) {Prompt final};
-  \node[app, right=of prompt] (llm) {LLM local};
-  \node[safety, right=of llm] (answer) {Reponse\\controlee};
+  \node[rag, right=of search] (format) {Passage formatting\\source + section};
+
+  \node[app, below=19mm of format] (prompt) {Final prompt};
+  \node[app, right=of prompt] (llm) {Local LLM};
+  \node[safety, right=of llm] (answer) {Controlled\\answer};
 
   \node[rag, below=of prompt] (numeric) {Forecast\\Backtest\\Metadata};
-  \node[rag, below=of numeric] (dash) {Etat dashboard\\prioritaire};
+  \node[rag, below=of numeric] (dash) {Priority\\dashboard state};
 
   \draw[arrow] (question) -- (intent);
   \draw[arrow] (intent) -- (route);
-  \draw[arrow] (route) -- node[above, font=\scriptsize] {oui} (embedq);
-  \draw[arrow] (route) -- node[below, font=\scriptsize] {non} (norag);
+
+  \draw[arrow] (route) -- node[labeltxt, above] {yes} (embedq);
+  \draw[arrow] (route) -- node[labeltxt, below] {no} (norag);
+
   \draw[arrow] (embedq) -- (db);
   \draw[arrow] (db) -- (search);
   \draw[arrow] (search) -- (format);
+
   \draw[arrow] (format) -- (prompt);
   \draw[arrow] (norag) -- (prompt);
+
   \draw[arrow] (numeric) -- (prompt);
   \draw[arrow] (dash) -- (prompt);
+
   \draw[arrow] (prompt) -- (llm);
   \draw[arrow] (llm) -- (answer);
+
 \end{tikzpicture}%
 }
 \end{center}
+
 \clearpage
 
-\section{Routage par intention}
+% ============================================================
+\section*{4. Intent Routing}
+
+{\small
+The intent router uses lightweight embeddings rather than a fully generative model. User questions are compared with intent centroids built from annotated examples, then routed to the minimal context required for the answer.
+}
+
+\vspace{2mm}
 
 \begin{center}
-\resizebox{0.88\textwidth}{!}{%
-\begin{tikzpicture}[node distance=14mm and 17mm]
-  \node[neutral] (question) {Question\\utilisateur};
-  \node[control, right=of question] (embedintent) {Light embedding\\all-MiniLM-L6-v2};
-  \node[control, right=of embedintent] (centroids) {Centroïdes\\d'intentions};
+\resizebox{0.92\textwidth}{!}{%
+\begin{tikzpicture}[node distance=14mm and 18mm]
+
+  \node[neutral, wideblock] (question) {User question};
+  \node[control, right=of question, wideblock] (embedding) {Light embedding\\\texttt{all-MiniLM-L6-v2}};
+  \node[control, right=of embedding, wideblock] (centroids) {Intent centroids\\annotated examples};
   \node[control, right=of centroids] (intent) {Cosine similarity\\intent router};
 
-  \node[control, below left=16mm and 46mm of intent] (help) {help\_request};
-  \node[control, below left=16mm and 15mm of intent] (forecast) {forecast\_query};
-  \node[control, below right=16mm and 15mm of intent] (backtest) {backtest\_query};
-  \node[control, below right=16mm and 46mm of intent] (strategy) {strategy\_query};
+  \node[control, below left=16mm and 43mm of intent] (help) {Help request};
+  \node[control, below left=16mm and 15mm of intent] (def) {Definition query};
+  \node[control, below=16mm of intent] (forecast) {Forecast query};
+  \node[control, below right=16mm and 15mm of intent] (backtest) {Backtest query};
+  \node[control, below right=16mm and 43mm of intent] (strategy) {Strategy query};
 
-  \node[control, below=23mm of help] (definition) {definition\_query};
-  \node[control, below=23mm of forecast] (model) {model\_query};
-  \node[control, below=23mm of backtest] (data) {data\_query};
-  \node[control, below=23mm of strategy] (out) {out\_of\_scope};
+  \node[rag, below=18mm of help] (helpctx) {Guidance\\context};
+  \node[rag, below=18mm of def] (defctx) {Static RAG};
+  \node[rag, below=18mm of forecast] (forecastctx) {Forecast\\context};
+  \node[rag, below=18mm of backtest] (backtestctx) {Backtest\\context};
+  \node[rag, below=18mm of strategy] (strategyctx) {Economic\\backtest};
 
-  \node[safety, below=23mm of definition] (guided) {Guidance\\deterministe};
-  \node[rag, below=23mm of model] (forecastctx) {Forecast\\context};
-  \node[rag, below=23mm of data] (backtestctx) {Backtest\\context};
-  \node[rag, below=23mm of out] (staticrag) {RAG Chroma\\+ metadata};
+  \node[app, below=22mm of forecastctx] (prompt) {Prompt builder};
+  \node[app, right=of prompt] (llm) {LLM / fallback};
+  \node[safety, right=of llm] (final) {Final answer};
 
-  \node[app, below=30mm of forecastctx] (prompt) {Prompt ou\\reponse directe};
-  \node[app, right=22mm of prompt] (payload) {Payload API};
-
-  \draw[arrow] (question) -- (embedintent);
-  \draw[arrow] (embedintent) -- (centroids);
+  \draw[arrow] (question) -- (embedding);
+  \draw[arrow] (embedding) -- (centroids);
   \draw[arrow] (centroids) -- (intent);
+
   \draw[arrow] (intent) -- (help);
+  \draw[arrow] (intent) -- (def);
   \draw[arrow] (intent) -- (forecast);
   \draw[arrow] (intent) -- (backtest);
   \draw[arrow] (intent) -- (strategy);
 
-  \draw[arrow] (help) -- (definition);
-  \draw[arrow] (forecast) -- (model);
-  \draw[arrow] (backtest) -- (data);
-  \draw[arrow] (strategy) -- (out);
+  \draw[arrow] (help) -- (helpctx);
+  \draw[arrow] (def) -- (defctx);
+  \draw[arrow] (forecast) -- (forecastctx);
+  \draw[arrow] (backtest) -- (backtestctx);
+  \draw[arrow] (strategy) -- (strategyctx);
 
-  \draw[arrow] (definition) -- (guided);
-  \draw[arrow] (model) -- (forecastctx);
-  \draw[arrow] (data) -- (backtestctx);
-  \draw[arrow] (out) -- (staticrag);
-
-  \draw[arrow] (guided) |- (prompt);
+  \draw[arrow] (helpctx) |- (prompt);
+  \draw[arrow] (defctx) |- (prompt);
   \draw[arrow] (forecastctx) -- (prompt);
   \draw[arrow] (backtestctx) |- (prompt);
-  \draw[arrow] (staticrag) |- (prompt);
-  \draw[arrow] (prompt) -- (payload);
+  \draw[arrow] (strategyctx) |- (prompt);
 
-  \node[neutral, above=7mm of guided] (note1) {Acceptation d'aide\\oui, vas-y, aide-moi};
-  \node[neutral, above=7mm of forecastctx] (note2) {Prevision\\rendement, VaR, ES};
-  \node[neutral, above=7mm of backtestctx] (note3) {Validation\\Kupiec, ES, regime};
-  \node[neutral, above=7mm of staticrag] (note4) {Definitions\\modeles, donnees};
+  \draw[arrow] (prompt) -- (llm);
+  \draw[arrow] (llm) -- (final);
 
-  \draw[dashedarrow] (note1) -- (guided);
-  \draw[dashedarrow] (note2) -- (forecastctx);
-  \draw[dashedarrow] (note3) -- (backtestctx);
-  \draw[dashedarrow] (note4) -- (staticrag);
 \end{tikzpicture}%
 }
 \end{center}
+
 \clearpage
 
-\section{Garde-fous}
+% ============================================================
+\section*{5. Response Guardrails}
+
+{\small
+The chatbot remains generative, but its output is checked before it reaches the dashboard. Guardrails detect unsupported numbers, investment advice, VaR/ES confusion, and critical metric interpretation errors, then apply a targeted correction when needed.
+}
+
+\vspace{2mm}
 
 \begin{center}
 \resizebox{0.92\textwidth}{!}{%
-\begin{tikzpicture}[node distance=14mm and 14mm]
-  \node[app] (raw) {Reponse brute\\LLM};
-  \node[app, right=of raw] (repair) {Answer repair};
-  \node[control, right=of repair] (validate) {Validation\\finale};
-  \node[decision, above right=of validate] (numbers) {Chiffres\\absents ?};
-  \node[decision, right=of validate] (advice) {Conseil\\financier ?};
-  \node[decision, below right=of validate] (vares) {Confusion\\VaR / ES ?};
-  \node[safety, right=of numbers] (fallback) {Correction\\ou fallback};
-  \node[safety, right=of advice] (refusal) {Refus\\controle};
-  \node[safety, right=of vares] (explain) {Correction\\definition};
-  \node[app, right=35mm of advice] (final) {Reponse finale\\API};
+\begin{tikzpicture}[node distance=13mm and 15mm]
+
+  \node[app] (raw) {Raw LLM\\answer};
+  \node[app, right=of raw] (repair) {Answer\\repair};
+  \node[control, right=of repair] (validate) {Final\\validation};
+
+  \node[decision, above right=11mm and 14mm of validate] (numbers) {Unsupported\\numbers?};
+  \node[decision, right=30mm of validate] (advice) {Investment\\advice?};
+  \node[decision, below right=11mm and 14mm of validate] (vares) {VaR / ES\\confusion?};
+
+  \node[safety, right=18mm of numbers] (fallback) {Targeted correction\\or fallback};
+  \node[safety, right=18mm of advice] (refusal) {Controlled\\refusal};
+  \node[safety, right=18mm of vares] (explain) {Definition\\correction};
+
+  \node[app, right=22mm of refusal] (final) {Final API\\answer};
+  \node[app, below=14mm of final] (payload) {API payload};
 
   \draw[arrow] (raw) -- (repair);
   \draw[arrow] (repair) -- (validate);
+
   \draw[arrow] (validate) -- (numbers);
   \draw[arrow] (validate) -- (advice);
   \draw[arrow] (validate) -- (vares);
-  \draw[arrow] (numbers) -- node[above, font=\scriptsize] {oui} (fallback);
-  \draw[arrow] (advice) -- node[above, font=\scriptsize] {oui} (refusal);
-  \draw[arrow] (vares) -- node[above, font=\scriptsize] {oui} (explain);
+
+  \draw[arrow] (numbers) -- node[labeltxt, above] {yes} (fallback);
+  \draw[arrow] (advice) -- node[labeltxt, above] {yes} (refusal);
+  \draw[arrow] (vares) -- node[labeltxt, above] {yes} (explain);
+
   \draw[arrow] (fallback) -- (final);
   \draw[arrow] (refusal) -- (final);
   \draw[arrow] (explain) -- (final);
-  \draw[dashedarrow] (validate) |- node[near start, above, font=\scriptsize] {ok} (final);
+
+  \draw[dashedarrow]
+    (validate.south) -- ++(0,-16mm) -| node[labeltxt, near start, below] {ok} (final.south);
+
+  \draw[arrow] (final) -- (payload);
+
 \end{tikzpicture}%
 }
 \end{center}
