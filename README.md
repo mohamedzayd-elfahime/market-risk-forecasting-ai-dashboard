@@ -25,7 +25,7 @@ ollama pull qwen2.5:3b
 
 ## Installation
 
-Depuis la racine du projet:
+Depuis la racine du projet, installation standard pour lancer l'application:
 
 ```powershell
 python -m venv .venv
@@ -38,6 +38,12 @@ Sur macOS/Linux, remplace le chemin Python par:
 ```bash
 ./.venv/bin/python -m pip install --upgrade pip
 ./.venv/bin/python -m pip install -r requirements.txt -r requirements-dev.txt
+```
+
+Installation complete, avec les dependances optionnelles RAG vectoriel et Hugging Face:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-all.txt
 ```
 
 ## Demarrer l'application
