@@ -1,0 +1,17 @@
+numpy
+pandas
+scipy
+statsmodels
+matplotlib
+scikit-learn
+joblib
+arch
+yfinance
+hmmlearn
+torch
+fastapi
+uvicorn
+pydantic
+optuna
+openpyxl
+python-multipart

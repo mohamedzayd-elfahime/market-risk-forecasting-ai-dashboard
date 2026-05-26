@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.env
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Runtime logs and temporary outputs
+*.log
+*.out.log
+*.err.log
+output.png
+chatbot-ui-check.png
+*.zip
+
+# Research data (keep dirs, ignore generated/intermediate contents)
+research/data/raw/*
+research/data/interim/*
+research/data/processed/*
+research/data/external/*
+research/notebooks/**/*.ipynb
+!research/data/raw/.gitkeep
+!research/data/interim/.gitkeep
+!research/data/processed/.gitkeep
+!research/data/external/.gitkeep
+
+# App-local generated runtime files
+app/logs/*
+!app/logs/.gitkeep
+app/backend/**/__pycache__/
+app/ml/**/__pycache__/
+app/tests/**/__pycache__/
+app/data/**/__pycache__/
+app/jobs/**/__pycache__/
+app/data/reports/hyperparameter_search/hyperparameter_search_*.csv
+app/data/reports/hyperparameter_search/hyperparameter_search_*.json
+app/data/reports/hyperparameter_search/return_hyperparameter_search_*.csv
+app/data/reports/hyperparameter_search/return_hyperparameter_search_*.json
+app/backend/chatbot/rag/vector_db/
+
+# Research reports
+research/reports/figures/*
+research/reports/tables/*
+
+# Documentation build
+docs/_build/

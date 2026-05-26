@@ -1,0 +1,39 @@
+{
+  "var_model": {
+    "converged": true,
+    "reason": "ok",
+    "epochs_ran": 33,
+    "best_epoch": 3,
+    "first_train_loss": 0.002248305523161829,
+    "final_train_loss": 0.0007557808661796065,
+    "first_val_loss": 0.001036582876143879,
+    "best_val_loss": 0.0008335925430353535,
+    "final_val_loss": 0.0008581629670899067,
+    "relative_val_improvement": 0.1958264387538949,
+    "final_generalization_gap": 0.00010238210091030023
+  },
+  "return_model": {
+    "converged": false,
+    "reason": "validation_loss_finished_above_initial",
+    "epochs_ran": 49,
+    "best_epoch": 19,
+    "first_train_loss": 3.10378053896832,
+    "final_train_loss": 2.3139478426496938,
+    "first_val_loss": 2.9814676579676176,
+    "best_val_loss": 2.8466308069856545,
+    "final_val_loss": 3.071849327338369,
+    "relative_val_improvement": 0.045224992000710666,
+    "final_generalization_gap": 0.7579014846886754
+  },
+  "es_model": {
+    "method": "two_step_ridge_after_var",
+    "ridge_alpha": 0.0009083711063976939,
+    "n_train_violations_used": 216,
+    "shortfall_floor": 1e-06,
+    "test_es_never_above_var": true,
+    "n_es_tail_observations": 40,
+    "es_tail_calibration_stat": -1.1190114359209118,
+    "es_tail_calibration_p_value": 0.2699802381627672,
+    "es_tail_residual_mean": -0.0015270372843448504
+  }
+}

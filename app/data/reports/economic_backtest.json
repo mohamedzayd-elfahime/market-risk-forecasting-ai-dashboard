@@ -1,0 +1,13 @@
+{
+  "n_observations": 786,
+  "final_wealth": 1.653283677475013,
+  "buy_hold_final_wealth": 1.7471806377374444,
+  "max_drawdown": -0.1871282065469284,
+  "buy_hold_max_drawdown": -0.1895000839626031,
+  "annualized_sharpe": 1.3894946142436817,
+  "buy_hold_sharpe": 1.3519293311492677,
+  "average_weight_used": 0.9347848498081803,
+  "average_turnover": 0.017985959722509052,
+  "transaction_cost": 0.0,
+  "weight_rule": "w_t uses a 1-period lag of a rolling VaR-budget weight to avoid look-ahead bias"
+}

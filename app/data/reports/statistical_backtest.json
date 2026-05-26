@@ -1,0 +1,19 @@
+{
+  "n_observations": 786,
+  "n_var_breaches": 40,
+  "violation_rate": 0.05089058524173028,
+  "expected_violation_rate": 0.05,
+  "kupiec_pof_stat": 0.0130512449581488,
+  "kupiec_pof_p_value": 0.9090459225863847,
+  "christoffersen_independence_stat": 0.5022907606770559,
+  "christoffersen_independence_p_value": 0.4784953074752736,
+  "christoffersen_cc_stat": 0.5153420056352047,
+  "christoffersen_cc_p_value": 0.7728494555785349,
+  "n_es_tail_observations": 40,
+  "es_tail_calibration_stat": -1.1190114359209118,
+  "es_tail_calibration_p_value": 0.2699802381627672,
+  "es_tail_residual_mean": -0.0015270372843448504,
+  "mean_pinball_loss": 0.0009446002779723919,
+  "mean_return_prediction_error": 0.0003070448396479965,
+  "rmse_return_prediction": 0.009860372636217262
+}

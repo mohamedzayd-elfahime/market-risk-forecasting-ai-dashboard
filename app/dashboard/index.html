@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MASI Risk Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+    />
+    <link rel="stylesheet" href="/dashboard/assets/css/app.css?v=20260524-clean-architecture" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="MASI Dashboard">
+        <span>MASI</span>
+        <strong>Risk Engine</strong>
+      </a>
+      <nav class="sidebar-nav" aria-label="Dashboard navigation">
+        <a class="is-active" href="#forecast" data-page-link="forecastPage">Forecast</a>
+        <a href="#backtest" data-page-link="backtestPage">Backtest</a>
+        <a href="#report" data-page-link="reportPage">Report</a>
+        <a href="#admin" data-page-link="adminPage">Admin</a>
+      </nav>
+      <div class="api-status" id="apiStatus">Checking API...</div>
+    </aside>
+
+    <main class="page">
+      <section class="dashboard-header">
+        <div>
+          <p class="eyebrow">Alpha 5% only</p>
+          <h1>MASI Forecast Dashboard</h1>
+          <p id="runMeta">Loading latest backend outputs...</p>
+        </div>
+        <button class="refresh-button" id="refreshButton" type="button">Refresh</button>
+      </section>
+
+      <div class="alert" id="errorBox" hidden></div>
+
+      <section class="page-section is-active" id="forecastPage">
+        <section class="stats-grid" id="forecast" aria-label="Forecast summary">
+          <article class="stat-card">
+            <p>VaR 5% 1-day</p>
+            <strong id="varValue">--</strong>
+            <span id="varTarget">Target --</span>
+          </article>
+          <article class="stat-card">
+            <p>ES 5% 1-day</p>
+            <strong id="esValue">--</strong>
+            <span>Two-step Ridge after VaR</span>
+          </article>
+          <article class="stat-card">
+            <p>Return forecast</p>
+            <strong id="returnValue">--</strong>
+            <span>Log-return forecast</span>
+          </article>
+          <article class="stat-card">
+            <p>EGARCH mean AR(1)</p>
+            <strong id="meanValue">--</strong>
+            <span id="meanTarget">Target --</span>
+          </article>
+          <article class="stat-card">
+            <p>EGARCH volatility</p>
+            <strong id="volatilityValue">--</strong>
+            <span id="volatilityTarget">Target --</span>
+          </article>
+          <article class="stat-card">
+            <p>Current regime</p>
+            <strong id="regimeValue">--</strong>
+            <span id="weightValue">Backtest allocation only</span>
+          </article>
+        </section>
+
+        <section class="chart-panel chart-panel-large">
+          <div class="panel-heading">
+            <div>
+              <h2>Price-scale forecast</h2>
+              <p>Observed MASI close with forecast, VaR and ES price proxies.</p>
+            </div>
+            <div class="panel-actions">
+              <div class="chart-tools" aria-label="Price chart controls">
+                <button class="chart-tool-button chart-tool-button-icon" type="button" data-chart-action="zoom-in" data-chart-id="price" aria-label="Zoom in">+</button>
+                <button class="chart-tool-button chart-tool-button-icon" type="button" data-chart-action="zoom-out" data-chart-id="price" aria-label="Zoom out">-</button>
+                <button class="chart-tool-button chart-tool-button-reset" type="button" data-chart-action="reset" data-chart-id="price">Reset</button>
+              </div>
+              <div class="range-actions" aria-label="Forecast horizon">
+                <button class="is-active" type="button" data-horizon="1">1D</button>
+                <button type="button" data-horizon="10">10D</button>
+                <button type="button" data-horizon="25">25D</button>
+              </div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="priceChart" aria-label="MASI price forecast chart"></canvas>
+          </div>
+        </section>
+
+        <section class="chart-panel chart-panel-medium">
+          <div class="panel-heading">
+            <div>
+              <h2>EGARCH mean and volatility</h2>
+              <p>Historical AR(1) mean and conditional volatility with the 1-day forecast.</p>
+            </div>
+            <div class="chart-tools" aria-label="Risk chart controls">
+              <button class="chart-tool-button chart-tool-button-icon" type="button" data-chart-action="zoom-in" data-chart-id="risk" aria-label="Zoom in">+</button>
+              <button class="chart-tool-button chart-tool-button-icon" type="button" data-chart-action="zoom-out" data-chart-id="risk" aria-label="Zoom out">-</button>
+              <button class="chart-tool-button chart-tool-button-reset" type="button" data-chart-action="reset" data-chart-id="risk">Reset</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="riskChart" aria-label="EGARCH mean and volatility chart"></canvas>
+          </div>
+        </section>
+      </section>
+
+      <section class="page-section" id="backtestPage">
+        <section class="stats-grid stats-grid-backtest" aria-label="Backtest summary">
+          <article class="stat-card">
+            <p>Calibration VaR</p>
+            <strong id="violationRate">--</strong>
+            <span id="violationStatus">Cible 5%</span>
+          </article>
+          <article class="stat-card">
+            <p>Breaches VaR</p>
+            <strong id="nViolations">--</strong>
+            <span id="breachLabel">Fenetre de test</span>
+          </article>
+          <article class="stat-card">
+            <p>Residual ES</p>
+            <strong id="esResidualMean">--</strong>
+            <span id="esResidualLabel">Realise - ES en queue</span>
+          </article>
+          <article class="stat-card">
+            <p>Richesse simulee</p>
+            <strong id="finalWealth">--</strong>
+            <span id="bhWealthLabel">vs Buy &amp; Hold</span>
+          </article>
+          <article class="stat-card">
+            <p>Max drawdown</p>
+            <strong id="drawdownValue">--</strong>
+            <span id="bhDrawdownLabel">vs Buy &amp; Hold</span>
+          </article>
+          <article class="stat-card">
+            <p>Sharpe annualise</p>
+            <strong id="sharpeValue">--</strong>
+            <span id="bhSharpeLabel">vs Buy &amp; Hold</span>
+          </article>
+        </section>
+
+        <section class="chart-panel chart-panel-large">
+          <div class="panel-heading">
+            <div>
+              <h2>Test predictions</h2>
+              <p>Realized test returns versus return forecast, VaR and ES.</p>
+            </div>
+            <div class="chart-tools" aria-label="Test chart controls">
+              <button class="chart-tool-button chart-tool-button-icon" type="button" data-chart-action="zoom-in" data-chart-id="test" aria-label="Zoom in">+</button>
+              <button class="chart-tool-button chart-tool-button-icon" type="button" data-chart-action="zoom-out" data-chart-id="test" aria-label="Zoom out">-</button>
+              <button class="chart-tool-button chart-tool-button-reset" type="button" data-chart-action="reset" data-chart-id="test">Reset</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="testChart" aria-label="Test predictions chart"></canvas>
+          </div>
+        </section>
+
+        <section class="chart-panel chart-panel-large">
+          <div class="panel-heading">
+            <div>
+              <h2>Economic Backtest</h2>
+              <p>Historical simulation of a risk-managed rule used only to evaluate the economic usefulness of the risk forecasts. Not an investment recommendation.</p>
+            </div>
+            <div class="chart-tools" aria-label="Wealth chart controls">
+              <button class="chart-tool-button chart-tool-button-icon" type="button" data-chart-action="zoom-in" data-chart-id="wealth" aria-label="Zoom in">+</button>
+              <button class="chart-tool-button chart-tool-button-icon" type="button" data-chart-action="zoom-out" data-chart-id="wealth" aria-label="Zoom out">-</button>
+              <button class="chart-tool-button chart-tool-button-reset" type="button" data-chart-action="reset" data-chart-id="wealth">Reset</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="wealthChart" aria-label="Economic backtest wealth chart"></canvas>
+          </div>
+        </section>
+
+        <section class="info-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Latest test rows</h2>
+              <p>Recent model predictions on the test split.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Realized</th>
+                  <th>Return pred</th>
+                  <th>VaR 5%</th>
+                  <th>ES 5%</th>
+                  <th>Breach</th>
+                </tr>
+              </thead>
+              <tbody id="testPredictionRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="page-section" id="reportPage">
+        <section class="info-panel report-panel" id="report">
+          <div class="panel-heading">
+            <div>
+              <h2>Latest report</h2>
+              <p>Generated by the MASI backend pipeline.</p>
+            </div>
+            <button class="refresh-button" id="downloadReportButton" type="button">Download report</button>
+          </div>
+          <pre id="reportContent">Loading report...</pre>
+        </section>
+      </section>
+
+      <section class="page-section" id="adminPage">
+        <section class="info-panel admin-upload-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Upload nouvelles donnees MASI</h2>
+              <p>Deposer un fichier Investing.com Excel ou CSV, puis lancer le pipeline de cleaning.</p>
+            </div>
+          </div>
+          <form class="admin-upload-form" id="adminUploadForm">
+            <label class="admin-file-drop" for="adminDataFile">
+              <span>Fichier Excel ou CSV</span>
+              <strong id="adminFileName">Aucun fichier selectionne</strong>
+              <small>Formats acceptes : .xlsx, .xls, .csv, .txt</small>
+            </label>
+            <input id="adminDataFile" name="file" type="file" accept=".xlsx,.xls,.csv,.txt" />
+            <div class="admin-upload-actions">
+              <button class="refresh-button" id="uploadDataButton" type="submit">Upload data</button>
+              <button class="refresh-button" id="runCleaningButton" type="button">Lancer cleaning</button>
+            </div>
+          </form>
+          <div class="admin-upload-status" id="adminUploadStatus">Aucun fichier envoye.</div>
+        </section>
+
+        <section class="info-panel admin-panel" id="admin">
+          <div class="panel-heading">
+            <div>
+              <h2>Workflows backend</h2>
+              <p>Actions regroupees par usage: donnees, production, modele et recherche.</p>
+            </div>
+            <button class="refresh-button" id="refreshAdminButton" type="button">Refresh admin</button>
+          </div>
+          <div class="admin-grid" id="pipelineGrid"></div>
+        </section>
+
+        <section class="info-panel admin-runs-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Derniers runs</h2>
+              <p>Statut en temps reel des pipelines lances depuis cette interface.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pipeline</th>
+                  <th>Status</th>
+                  <th>Started</th>
+                  <th>Finished</th>
+                  <th>Code</th>
+                </tr>
+              </thead>
+              <tbody id="pipelineRunRows"></tbody>
+            </table>
+          </div>
+          <pre class="admin-log" id="pipelineLog">Aucun run selectionne.</pre>
+        </section>
+      </section>
+    </main>
+
+    <button class="chatbot-fab" id="chatButton" type="button" aria-label="Open chatbot" title="Open chatbot">
+      <span class="chatbot-fab-icon">
+        <span class="chatbot-fab-eye"></span>
+        <span class="chatbot-fab-eye"></span>
+      </span>
+    </button>
+
+    <div class="chatbot-overlay" id="chatOverlay" hidden></div>
+    <aside class="chatbot-panel" id="chatPanel" aria-hidden="true" aria-label="MASI chatbot">
+      <div class="chatbot-panel-header">
+        <div class="chatbot-hero-copy">
+          <p class="chatbot-kicker">MASI Assistant</p>
+          <h2>Risk Assistant</h2>
+        </div>
+        <div class="chatbot-hero-visual" aria-hidden="true">
+          <div class="chatbot-orbit"></div>
+          <div class="chatbot-robot">
+            <span class="chatbot-robot-eye"></span>
+            <span class="chatbot-robot-eye"></span>
+          </div>
+          <div class="chatbot-wave">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        <button class="chatbot-close" id="chatCloseButton" type="button" aria-label="Close chatbot">×</button>
+      </div>
+
+      <div class="chatbot-messages" id="chatMessages">
+        <article class="chat-message chat-message-assistant chat-message-intro">
+          <div class="chat-bot-badge" aria-hidden="true">M</div>
+          <div class="chat-message-shell">
+            <p class="chat-message-label">MASI Risk Assistant</p>
+            <p>Pose une question sur le forecast, la VaR, l'ES, le regime ou le backtest.</p>
+          </div>
+        </article>
+        <section class="chat-starter-prompts" id="chatStarterPrompts" aria-label="Suggestions de questions">
+          <button class="chat-starter-chip" type="button" data-chat-prompt="Resume-moi ce que le dashboard dit maintenant sur le MASI, avec les chiffres affiches.">
+            Lire le dashboard
+          </button>
+          <button class="chat-starter-chip" type="button" data-chat-prompt="Explique-moi si le backtesting actuel valide bien la VaR et l'ES.">
+            Valider le backtest
+          </button>
+          <button class="chat-starter-chip" type="button" data-chat-prompt="Pourquoi la prevision de rendement peut etre differente de la VaR et de l'ES ?">
+            Comprendre VaR/ES
+          </button>
+        </section>
+      </div>
+
+      <form class="chatbot-composer" id="chatForm">
+        <label class="sr-only" for="chatInput">Votre question</label>
+        <textarea
+          id="chatInput"
+          name="question"
+          rows="3"
+          maxlength="2000"
+          placeholder="Demande une lecture du forecast, de la VaR, de l'ES, du regime ou du backtest..."
+        ></textarea>
+        <div class="chatbot-voice-meter" id="chatVoiceMeter" hidden>
+          <span class="chatbot-voice-pulse" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+          <span id="chatVoiceStatus">Ecoute en cours...</span>
+        </div>
+        <div class="chatbot-composer-footer">
+          <span class="chatbot-hint">Pas de conseil d'investissement.</span>
+          <button class="chatbot-voice" id="chatVoiceButton" type="button" aria-label="Dicter une question" title="Dicter une question">
+            <span aria-hidden="true"></span>
+          </button>
+          <button class="chatbot-send" id="chatSendButton" type="submit">Envoyer</button>
+        </div>
+      </form>
+    </aside>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script src="/dashboard/assets/js/app.js?v=20260524-clean-architecture"></script>
+  </body>
+</html>
