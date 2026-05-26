@@ -254,6 +254,13 @@ def warm_retriever_cache(config: RetrieverConfig = RetrieverConfig()) -> None:
     """
 
     load_vector_store(config)
+    try:
+        from backend.chatbot.intent_router import warm_intent_router
+
+        warm_intent_router()
+    except Exception:
+        # RAG warmup remains useful even if intent centroid warmup fails.
+        pass
 
 
 # ---------------------------------------------------------------------

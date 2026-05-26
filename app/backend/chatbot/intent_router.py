@@ -1,9 +1,10 @@
-"""Semantic intent router for the MASI Risk Dashboard chatbot.
+"""Embedding-based intent router for the MASI Risk Dashboard chatbot.
 
-This module intentionally avoids hand-written keyword routing.  Each intent is
-represented by a short natural-language route description, and the router picks
-the closest route semantically.  The output still matches the rest of the
-chatbot architecture:
+Each intent is represented by a small set of annotated route examples. At
+runtime, a lightweight local embedding model maps the user question and the
+intent examples into the same vector space; the router picks the closest intent
+centroid by cosine similarity. The output still matches the rest of the chatbot
+architecture:
 
 user request -> intent router -> static RAG / forecast / backtest route
 """
@@ -14,6 +15,12 @@ import math
 import re
 import unicodedata
 from collections import Counter
+from functools import lru_cache
+
+import numpy as np
+
+
+INTENT_SIMILARITY_THRESHOLD = 0.30
 
 
 _STOP_WORDS = {
@@ -72,14 +79,151 @@ INTENT_DESCRIPTIONS: dict[str, str] = {
     ),
 }
 
+
+INTENT_EXAMPLES: dict[str, tuple[str, ...]] = {
+    "help_request": (
+        INTENT_DESCRIPTIONS["help_request"],
+        "bonjour",
+        "salut",
+        "aide moi a commencer",
+        "guide moi dans le dashboard",
+        "que peux tu faire",
+        "par ou commencer dans le dashboard MASI",
+    ),
+    "definition_query": (
+        INTENT_DESCRIPTIONS["definition_query"],
+        "c'est quoi la VaR",
+        "explique l'Expected Shortfall",
+        "quelle est la difference entre VaR et ES",
+        "que signifie regime HMM",
+        "definis EGARCH",
+        "explique le risk targeting",
+    ),
+    "forecast_query": (
+        INTENT_DESCRIPTIONS["forecast_query"],
+        "quelle est la prevision actuelle",
+        "resume la prediction a 1 jour",
+        "donne le rendement prevu du MASI",
+        "quelle est la VaR actuelle",
+        "quelle est l'ES actuelle",
+        "quel est le regime courant",
+        "montre la prevision horizon 10 jours",
+    ),
+    "backtest_query": (
+        INTENT_DESCRIPTIONS["backtest_query"],
+        "donne les resultats du backtest",
+        "quelle est la p-value Kupiec",
+        "explique le test de Christoffersen",
+        "combien de violations VaR",
+        "le modele est il bien calibre",
+        "compare predit et realise",
+    ),
+    "strategy_query": (
+        INTENT_DESCRIPTIONS["strategy_query"],
+        "comment marche la strategie risk managed",
+        "comment marche le risk-targeting",
+        "comment fonctionne le risk-targeting",
+        "explique le poids simule",
+        "quelle exposition est utilisee",
+        "que signifie le drawdown",
+        "explique la richesse finale simulee",
+        "dois-je acheter le MASI",
+        "dois-je vendre le MASI",
+    ),
+    "model_query": (
+        INTENT_DESCRIPTIONS["model_query"],
+        "quelle est l'architecture du modele",
+        "comment fonctionne le LSTM",
+        "comment fonctionne EGARCH",
+        "explique le modele HMM",
+        "comment le chatbot construit sa reponse",
+        "quelle configuration du LLM",
+    ),
+    "data_query": (
+        INTENT_DESCRIPTIONS["data_query"],
+        "quelle est la source des donnees",
+        "quelle periode couvre le dataset",
+        "quelle est la frequence des donnees",
+        "comment les donnees sont nettoyees",
+        "explique le preprocessing",
+        "quelles variables sont utilisees",
+    ),
+    "out_of_scope": (
+        INTENT_DESCRIPTIONS["out_of_scope"],
+        "quelle est la meteo a Paris",
+        "donne une recette de cuisine",
+        "traduis ce texte",
+        "parle moi de football",
+        "quel film regarder ce soir",
+        "actualites politiques",
+    ),
+}
+
+
 def classify_user_intent(question: str) -> str:
-    """Classify the user request with a semantic route-description matcher."""
+    """Classify the user request with lightweight embedding centroids."""
 
     if not isinstance(question, str) or not question.strip():
         return "help_request"
     if _is_short_help_question(question):
         return "help_request"
 
+    try:
+        intent = _classify_with_embeddings(question)
+        if intent is not None:
+            return intent
+    except Exception:
+        # Keep the chatbot available if the local embedding model is missing.
+        pass
+
+    return _classify_with_lexical_similarity(question)
+
+
+def _classify_with_embeddings(question: str) -> str | None:
+    query_embedding = _encode_texts((question.strip(),))[0]
+    centroids = _intent_centroids()
+    scored = [
+        (intent, _vector_cosine_similarity(query_embedding, centroid))
+        for intent, centroid in centroids.items()
+    ]
+    scored.sort(key=lambda item: item[1], reverse=True)
+    best_intent, best_score = scored[0]
+    if best_score < INTENT_SIMILARITY_THRESHOLD:
+        return "out_of_scope"
+    return best_intent
+
+
+@lru_cache(maxsize=1)
+def _intent_centroids() -> dict[str, np.ndarray]:
+    centroids: dict[str, np.ndarray] = {}
+    for intent, examples in INTENT_EXAMPLES.items():
+        embeddings = _encode_texts(examples)
+        centroid = embeddings.mean(axis=0)
+        norm = np.linalg.norm(centroid)
+        centroids[intent] = centroid / norm if norm else centroid
+    return centroids
+
+
+def _encode_texts(texts: tuple[str, ...]) -> np.ndarray:
+    from backend.chatbot.rag.retriever import load_embeddings
+
+    embeddings = load_embeddings().embed_documents(list(texts))
+    return np.asarray(embeddings, dtype=np.float32)
+
+
+def _vector_cosine_similarity(left: np.ndarray, right: np.ndarray) -> float:
+    denominator = float(np.linalg.norm(left) * np.linalg.norm(right))
+    if denominator == 0:
+        return 0.0
+    return float(np.dot(left, right) / denominator)
+
+
+def warm_intent_router() -> None:
+    """Precompute intent centroids during application warmup."""
+    _intent_centroids()
+
+
+def _classify_with_lexical_similarity(question: str) -> str:
     query_vector = Counter(_tokenize(question))
     if not query_vector:
         return "out_of_scope"

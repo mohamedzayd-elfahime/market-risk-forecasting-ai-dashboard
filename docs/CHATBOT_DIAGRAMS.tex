@@ -83,7 +83,7 @@
   \node[app, right=of api] (service) {Chat service\\orchestrateur};
 
   \node[control, below=of service] (validate) {Validation\\question + historique};
-  \node[control, below left=of validate] (intent) {Intent router};
+  \node[control, below left=of validate] (intent) {Embedding\\intent router};
   \node[control, below=of validate] (policy) {Response policy};
   \node[control, below right=of validate] (context) {Routed context\\builder};
 
@@ -195,7 +195,10 @@
 \begin{center}
 \resizebox{0.88\textwidth}{!}{%
 \begin{tikzpicture}[node distance=14mm and 17mm]
-  \node[control] (intent) {Intent router};
+  \node[neutral] (question) {Question\\utilisateur};
+  \node[control, right=of question] (embedintent) {Light embedding\\all-MiniLM-L6-v2};
+  \node[control, right=of embedintent] (centroids) {Centroïdes\\d'intentions};
+  \node[control, right=of centroids] (intent) {Cosine similarity\\intent router};
 
   \node[control, below left=16mm and 46mm of intent] (help) {help\_request};
   \node[control, below left=16mm and 15mm of intent] (forecast) {forecast\_query};
@@ -215,6 +218,9 @@
   \node[app, below=30mm of forecastctx] (prompt) {Prompt ou\\reponse directe};
   \node[app, right=22mm of prompt] (payload) {Payload API};
 
+  \draw[arrow] (question) -- (embedintent);
+  \draw[arrow] (embedintent) -- (centroids);
+  \draw[arrow] (centroids) -- (intent);
   \draw[arrow] (intent) -- (help);
   \draw[arrow] (intent) -- (forecast);
   \draw[arrow] (intent) -- (backtest);

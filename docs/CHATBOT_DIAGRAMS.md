@@ -11,7 +11,7 @@ flowchart LR
     API --> Service["Chat service<br/>orchestrateur"]
 
     Service --> Validate["Validation question<br/>historique recent"]
-    Validate --> Intent["Intent router<br/>help, forecast, backtest,<br/>definition, model, data"]
+    Validate --> Intent["Embedding intent router<br/>centroid similarity<br/>help, forecast, backtest,<br/>definition, model, data"]
     Intent --> Policy["Response policy<br/>autorise ou bloque le LLM"]
     Intent --> Context["Routed context builder"]
 
@@ -110,7 +110,10 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    Intent["Intent router"] --> Help["help_request"]
+    Q["Question utilisateur"] --> Embed["Light embedding<br/>all-MiniLM-L6-v2"]
+    Embed --> Centroids["Centroïdes d'intentions<br/>exemples annotés"]
+    Centroids --> Intent["Intent router<br/>cosine similarity"]
+    Intent --> Help["help_request"]
     Intent --> Forecast["forecast_query"]
     Intent --> Backtest["backtest_query"]
     Intent --> Strategy["strategy_query"]

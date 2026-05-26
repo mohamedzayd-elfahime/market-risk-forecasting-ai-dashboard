@@ -79,7 +79,7 @@ flowchart TD
 
 1. La route `chat.py` recoit une question, l'historique recent et parfois l'etat exact du dashboard.
 2. `service.py` nettoie la question et tronque l'historique pour garder une memoire courte.
-3. L'intention est classee: aide, definition, forecast, backtest, strategie, modele, donnees ou hors-scope.
+3. L'intention est classee par un routeur a embeddings legers: la question est encodee avec `sentence-transformers/all-MiniLM-L6-v2`, puis comparee aux centroïdes d'exemples annotés pour chaque intention. Un fallback lexical existe seulement si le modele local n'est pas disponible.
 4. Une politique de reponse est construite. Elle peut interdire le LLM pour les demandes de conseil d'investissement.
 5. Le contexte est route selon l'intention:
    - `forecast_query`: valeurs exactes des previsions.
@@ -94,6 +94,24 @@ flowchart TD
 ## Routage d'intention
 
 Le routage evite d'envoyer tout le contexte a chaque question. Une question sur la VaR n'a pas besoin des backtests complets, et une question sur Kupiec n'a pas besoin des previsions courantes.
+
+Techniquement, le routeur d'intention n'appelle pas le LLM. Il utilise un modele d'embedding pre-entraine leger, le meme modele que le RAG vectoriel par defaut:
+
+```text
+sentence-transformers/all-MiniLM-L6-v2
+```
+
+Chaque intention possede plusieurs exemples annotés. Au demarrage, le systeme encode ces exemples et calcule un centroïde par intention. Pour une question utilisateur:
+
+```text
+question
+  -> embedding local
+  -> similarite cosinus avec chaque centroïde d'intention
+  -> meilleure intention si le score depasse le seuil
+  -> out_of_scope si confiance insuffisante
+```
+
+Cette approche est plus défendable qu'un simple keyword matching: elle reste locale, rapide et deterministe, mais capture mieux les reformulations naturelles.
 
 Mapping simplifie:
 
