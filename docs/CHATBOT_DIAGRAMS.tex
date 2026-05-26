@@ -1,9 +1,9 @@
-\documentclass[11pt,a4paper]{article}
+\documentclass[11pt,a4paper,landscape]{article}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[french]{babel}
-\usepackage[a4paper,margin=1.8cm]{geometry}
+\usepackage[a4paper,landscape,margin=1.25cm]{geometry}
 \usepackage{xcolor}
 \usepackage{tikz}
 \usepackage{enumitem}
@@ -15,6 +15,9 @@
   linkcolor=blue!60!black,
   urlcolor=blue!60!black
 }
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
 
 \definecolor{AppGreen}{HTML}{D9EED3}
 \definecolor{ControlBlue}{HTML}{DCEBFF}
@@ -28,8 +31,8 @@
     rounded corners=2pt,
     draw=black!65,
     align=center,
-    minimum height=9mm,
-    inner xsep=6pt,
+    minimum height=10mm,
+    inner xsep=7pt,
     inner ysep=5pt,
     font=\small
   },
@@ -72,8 +75,8 @@
 \section{Vue globale du chatbot}
 
 \begin{center}
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[node distance=12mm and 12mm]
+\resizebox{0.96\textwidth}{!}{%
+\begin{tikzpicture}[node distance=13mm and 13mm]
   \node[neutral] (user) {Utilisateur};
   \node[app, right=of user] (ui) {Dashboard web\\Chat panel};
   \node[app, right=of ui] (api) {FastAPI\\\texttt{/chat/ask}\\\texttt{/chat/ask/stream}};
@@ -119,12 +122,13 @@
 \end{tikzpicture}%
 }
 \end{center}
+\clearpage
 
 \section{Construction de la base RAG vectorielle}
 
 \begin{center}
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[node distance=12mm and 12mm]
+\resizebox{0.96\textwidth}{!}{%
+\begin{tikzpicture}[node distance=14mm and 14mm]
   \node[neutral] (cmd) {Commande\\\texttt{python -m backend.chatbot.rag.build\_index}};
   \node[neutral, below=of cmd] (docs) {Documents Markdown\\\texttt{backend/chatbot/rag/docs}};
   \node[app, right=of docs] (clean) {Nettoyage\\Markdown};
@@ -146,12 +150,13 @@
 \end{tikzpicture}%
 }
 \end{center}
+\clearpage
 
 \section{Retrieval RAG pendant une question}
 
 \begin{center}
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[node distance=12mm and 12mm]
+\resizebox{0.96\textwidth}{!}{%
+\begin{tikzpicture}[node distance=14mm and 14mm]
   \node[neutral] (question) {Question\\utilisateur};
   \node[control, right=of question] (intent) {Intent\\detectee};
   \node[decision, right=of intent] (route) {RAG\\requis ?};
@@ -183,60 +188,73 @@
 \end{tikzpicture}%
 }
 \end{center}
+\clearpage
 
 \section{Routage par intention}
 
 \begin{center}
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[node distance=10mm and 10mm]
+\resizebox{0.88\textwidth}{!}{%
+\begin{tikzpicture}[node distance=14mm and 17mm]
   \node[control] (intent) {Intent router};
-  \node[control, below left=of intent] (help) {help\_request};
-  \node[control, below=of intent] (forecast) {forecast\_query};
-  \node[control, below right=of intent] (backtest) {backtest\_query};
-  \node[control, right=of backtest] (strategy) {strategy\_query};
-  \node[control, left=of help] (definition) {definition\_query};
-  \node[control, below=of definition] (model) {model\_query};
-  \node[control, below=of strategy] (data) {data\_query};
 
-  \node[safety, below=of help] (guided) {Guidance\\deterministe};
-  \node[rag, below=of forecast] (forecastctx) {Forecast\\context};
-  \node[rag, below=of backtest] (backtestctx) {Backtest\\context};
-  \node[rag, below=of model] (staticrag) {Static RAG\\Chroma};
-  \node[rag, below=of data] (metadata) {Model\\metadata};
-  \node[app, below=28mm of intent] (prompt) {Prompt ou\\reponse directe};
-  \node[app, below=of prompt] (payload) {Payload API};
+  \node[control, below left=16mm and 46mm of intent] (help) {help\_request};
+  \node[control, below left=16mm and 15mm of intent] (forecast) {forecast\_query};
+  \node[control, below right=16mm and 15mm of intent] (backtest) {backtest\_query};
+  \node[control, below right=16mm and 46mm of intent] (strategy) {strategy\_query};
+
+  \node[control, below=23mm of help] (definition) {definition\_query};
+  \node[control, below=23mm of forecast] (model) {model\_query};
+  \node[control, below=23mm of backtest] (data) {data\_query};
+  \node[control, below=23mm of strategy] (out) {out\_of\_scope};
+
+  \node[safety, below=23mm of definition] (guided) {Guidance\\deterministe};
+  \node[rag, below=23mm of model] (forecastctx) {Forecast\\context};
+  \node[rag, below=23mm of data] (backtestctx) {Backtest\\context};
+  \node[rag, below=23mm of out] (staticrag) {RAG Chroma\\+ metadata};
+
+  \node[app, below=30mm of forecastctx] (prompt) {Prompt ou\\reponse directe};
+  \node[app, right=22mm of prompt] (payload) {Payload API};
 
   \draw[arrow] (intent) -- (help);
   \draw[arrow] (intent) -- (forecast);
   \draw[arrow] (intent) -- (backtest);
   \draw[arrow] (intent) -- (strategy);
-  \draw[arrow] (intent) -- (definition);
-  \draw[arrow] (intent) -- (model);
-  \draw[arrow] (intent) -- (data);
-  \draw[arrow] (help) -- (guided);
-  \draw[arrow] (forecast) -- (forecastctx);
-  \draw[arrow] (backtest) -- (backtestctx);
-  \draw[arrow] (strategy) -- (backtestctx);
-  \draw[arrow] (definition) -- (staticrag);
-  \draw[arrow] (model) -- (staticrag);
-  \draw[arrow] (data) -- (staticrag);
-  \draw[arrow] (model) -- (metadata);
-  \draw[arrow] (data) -- (metadata);
-  \draw[arrow] (guided) -- (prompt);
+
+  \draw[arrow] (help) -- (definition);
+  \draw[arrow] (forecast) -- (model);
+  \draw[arrow] (backtest) -- (data);
+  \draw[arrow] (strategy) -- (out);
+
+  \draw[arrow] (definition) -- (guided);
+  \draw[arrow] (model) -- (forecastctx);
+  \draw[arrow] (data) -- (backtestctx);
+  \draw[arrow] (out) -- (staticrag);
+
+  \draw[arrow] (guided) |- (prompt);
   \draw[arrow] (forecastctx) -- (prompt);
-  \draw[arrow] (backtestctx) -- (prompt);
-  \draw[arrow] (staticrag) -- (prompt);
-  \draw[arrow] (metadata) -- (prompt);
+  \draw[arrow] (backtestctx) |- (prompt);
+  \draw[arrow] (staticrag) |- (prompt);
   \draw[arrow] (prompt) -- (payload);
+
+  \node[neutral, above=7mm of guided] (note1) {Acceptation d'aide\\oui, vas-y, aide-moi};
+  \node[neutral, above=7mm of forecastctx] (note2) {Prevision\\rendement, VaR, ES};
+  \node[neutral, above=7mm of backtestctx] (note3) {Validation\\Kupiec, ES, regime};
+  \node[neutral, above=7mm of staticrag] (note4) {Definitions\\modeles, donnees};
+
+  \draw[dashedarrow] (note1) -- (guided);
+  \draw[dashedarrow] (note2) -- (forecastctx);
+  \draw[dashedarrow] (note3) -- (backtestctx);
+  \draw[dashedarrow] (note4) -- (staticrag);
 \end{tikzpicture}%
 }
 \end{center}
+\clearpage
 
 \section{Garde-fous}
 
 \begin{center}
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[node distance=11mm and 10mm]
+\resizebox{0.92\textwidth}{!}{%
+\begin{tikzpicture}[node distance=14mm and 14mm]
   \node[app] (raw) {Reponse brute\\LLM};
   \node[app, right=of raw] (repair) {Answer repair};
   \node[control, right=of repair] (validate) {Validation\\finale};
