@@ -42,7 +42,7 @@ backend/chatbot/response_guardrails.py
 
 ## Diagramme du flux
 
-Pour une vue visuelle complete, voir aussi [Diagrammes du systeme chatbot](CHATBOT_DIAGRAMS.md).
+Pour une vue visuelle complete, voir aussi `CHATBOT_DIAGRAMS.md`. Une version LaTeX native, sans Markdown ni Mermaid, est disponible dans `CHATBOT_DIAGRAMS.tex`.
 
 ```mermaid
 flowchart TD
