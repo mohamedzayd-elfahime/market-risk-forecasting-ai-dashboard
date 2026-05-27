@@ -1,0 +1,30 @@
+site_name: Market Risk Forecasting AI Dashboard
+site_description: End-to-end market risk forecasting and AI-assisted risk analysis platform.
+site_url: https://market-risk-forecasting-ai-dashboard.readthedocs.io/
+
+repo_url: https://github.com/mohamedzayd-elfahime/market-risk-forecasting-ai-dashboard
+repo_name: mohamedzayd-elfahime/market-risk-forecasting-ai-dashboard
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: blue
+    accent: cyan
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+
+nav:
+  - Home: index.md
+  - Global Architecture: ARCHITECTURE.md
+  - Chatbot Architecture: CHATBOT_ARCHITECTURE.md
+  - Chatbot Diagrams: CHATBOT_DIAGRAMS.md

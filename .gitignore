@@ -60,3 +60,4 @@ research/reports/tables/*
 
 # Documentation build
 docs/_build/
+site/
