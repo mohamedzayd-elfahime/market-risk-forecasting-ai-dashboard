@@ -1,12 +1,25 @@
-# Research Workspace
+# Research Companion
 
-`research/` contains exploratory and report-oriented material that is not required by the running dashboard.
+The full research notebook workflow is maintained in a dedicated repository:
 
-Folder purpose:
+https://github.com/mohamedzayd-elfahime/masi-risk-research-notebooks
 
-- `notebooks/`: research notebooks grouped by modeling stage
-- `src/`: reusable notebook helpers and experimental analysis code
-- `data/`: research datasets used by notebooks
-- `reports/`: research figures and tables
+This application repository focuses on the runnable system:
 
-Production code should live in `app/`. When a research workflow becomes part of the dashboard or Admin page, promote it deliberately into `app/jobs`, `app/ml` or `app/backend/services`.
+- FastAPI services;
+- dashboard integration;
+- ML pipelines and jobs;
+- trained artifacts for local inference;
+- runtime forecast and backtest outputs;
+- controlled RAG chatbot integration.
+
+The research repository focuses on:
+
+- statistical validation notebooks;
+- GARCH/EGARCH benchmarks;
+- LSTM VaR/Expected Shortfall experiments;
+- backtesting results;
+- economic evaluation;
+- model comparison and methodology.
+
+The notebooks are kept out of this repository to avoid duplication and keep the application release clean.

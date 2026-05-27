@@ -1,31 +1,68 @@
-# MASI Risk Engine
+# Market Risk Forecasting AI Dashboard
 
-MASI Risk Engine est une application locale de prevision et d'analyse du risque pour l'indice MASI. Elle combine une API FastAPI, un dashboard web statique, des pipelines ML, des artefacts de modele, des rapports de backtesting et un chatbot controle par RAG.
+End-to-end market risk forecasting and AI-assisted risk analysis platform, applied to the Moroccan MASI stock index.
 
-Le projet sert a explorer les previsions de rendement, la VaR, l'Expected Shortfall, les regimes de volatilite HMM et les resultats de validation. Il ne fournit pas de conseil d'investissement.
+This project combines quantitative risk research, production-oriented machine learning pipelines, VaR/Expected Shortfall backtesting, volatility regime analysis, a FastAPI dashboard, and a controlled local AI assistant for interpreting risk outputs.
 
-## Fonctionnalites
+It is designed as a research-to-application system: the repository includes the runnable application, trained artifacts for local inference, runtime dashboard data, API services, ML workflows, tests, and public architecture documentation.
 
-- Dashboard web servi par FastAPI.
-- API REST pour les previsions, series de prix, backtests, rapports, plots, contexte dashboard et chatbot.
-- Pipelines de donnees, entrainement, inference, validation et generation de rapport.
-- Modeles hybrides autour de LSTM, Ridge, EGARCH/GARCH, HMM et modeles tabulaires.
-- Chatbot local via Ollama, avec routage d'intention, RAG Markdown, contexte numerique, politiques de reponse et garde-fous.
-- Tests anti-leakage, sequences temporelles et qualite chatbot.
+> This project is for research, education, and risk interpretation. It does not provide financial advice.
 
-## Prerequis
+## Highlights
 
-- Python 3.11 ou plus recent.
-- Ollama pour utiliser le chatbot local.
-- Le modele Ollama configure par defaut:
+- FastAPI backend serving a static web dashboard and REST API.
+- Forecasting workflow for returns, VaR, Expected Shortfall, volatility, and HMM regimes.
+- Statistical backtesting with Kupiec, Christoffersen, violation analysis, and ES diagnostics.
+- Economic backtest outputs and model validation reports.
+- Trained model artifacts included for local demo and inference without retraining.
+- Local AI assistant powered by Ollama, embedding-based intent routing, Chroma vector RAG, response policies, and guardrails.
+- Tests for temporal leakage, sequence construction, chatbot behavior, streaming, and answer safety.
 
-```powershell
-ollama pull qwen2.5:3b
+## System Layers
+
+```text
+Research layer
+  -> statistical validation, benchmarks, model evaluation
+
+ML application layer
+  -> data pipelines, training, inference, artifacts, backtesting
+
+API and dashboard layer
+  -> FastAPI routes, services, schemas, static dashboard
+
+AI assistant layer
+  -> local LLM, intent routing, vector RAG, dashboard grounding, guardrails
 ```
 
-## Installation
+## Repository Structure
 
-Depuis la racine du projet, installation standard pour lancer l'application:
+```text
+app/
+  backend/        FastAPI routes, services, chatbot, RAG, schemas, configuration
+  dashboard/      Static HTML/CSS/JS dashboard served by FastAPI
+  ml/             Training, inference, utilities, and trained artifacts
+  pipelines/      Reusable data workflows
+  jobs/           CLI entrypoints for full or partial workflows
+  data/           Runtime data, reports, forecasts, plots, and minimal inputs
+  tests/          Leakage, time-series, API, and chatbot quality tests
+
+docs/
+  ARCHITECTURE.md
+  CHATBOT_ARCHITECTURE.md
+  CHATBOT_DIAGRAMS.md
+  CHATBOT_DIAGRAMS.tex
+
+research/
+  README.md       Link to the dedicated research notebook repository
+
+tools/
+  README.md
+  test_local_llm.py
+```
+
+## Quick Start
+
+### 1. Create the environment
 
 ```powershell
 python -m venv .venv
@@ -33,55 +70,92 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-dev.txt
 ```
 
-Sur macOS/Linux, remplace le chemin Python par:
+On macOS/Linux:
 
 ```bash
+python -m venv .venv
 ./.venv/bin/python -m pip install --upgrade pip
 ./.venv/bin/python -m pip install -r requirements.txt -r requirements-dev.txt
 ```
 
-Installation complete, avec les dependances de test:
+### 2. Install the local LLM model
+
+The chatbot uses Ollama by default:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements-all.txt
+ollama pull qwen2.5:3b
 ```
 
-Construire ou reconstruire l'index RAG vectoriel:
+### 3. Build the vector RAG index
 
 ```powershell
 cd app
 ..\.venv\Scripts\python.exe -m backend.chatbot.rag.build_index
 ```
 
-## Demarrer l'application
+On macOS/Linux:
 
-Depuis `app/`:
+```bash
+cd app
+../.venv/bin/python -m backend.chatbot.rag.build_index
+```
+
+### 4. Launch the application
 
 ```powershell
 cd app
 ..\.venv\Scripts\python.exe -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Puis ouvre:
+Open:
 
 - Dashboard: `http://127.0.0.1:8000/`
-- Documentation API interactive: `http://127.0.0.1:8000/docs`
+- API docs: `http://127.0.0.1:8000/docs`
 
-## Utiliser le dashboard
+## Dashboard Features
 
-Le dashboard regroupe les vues principales:
+- `Forecast`: expected return, VaR, Expected Shortfall, EGARCH volatility, and HMM volatility regime.
+- `Backtest`: VaR violations, Kupiec/Christoffersen diagnostics, ES diagnostics, and economic simulation.
+- `Report`: latest generated risk report.
+- `Admin`: data upload and workflow controls.
+- `Chat`: local AI assistant specialized in market risk interpretation.
 
-- `Forecast`: prevision de rendement, VaR, ES, volatilite EGARCH et regime HMM.
-- `Backtest`: violations de VaR, tests Kupiec/Christoffersen, diagnostics ES et simulation economique.
-- `Report`: dernier rapport de prevision genere par les jobs.
-- `Admin`: chargement de donnees MASI et lancement des workflows backend.
-- `Chat`: assistant specialise MASI Risk Dashboard.
+## Chatbot Architecture
 
-Le chatbot utilise les valeurs affichees dans l'interface quand elles sont envoyees avec la question. Il refuse les demandes de recommandation d'achat/vente et se limite a l'interpretation du dashboard.
+The chatbot is not a generic LLM wrapper. It is a controlled assistant designed around market risk interpretation.
 
-## Configuration utile
+```text
+User question
+  -> FastAPI chat endpoint
+  -> embedding intent router
+  -> routed context builder
+  -> dashboard state + vector RAG
+  -> response policy
+  -> prompt builder
+  -> local LLM
+  -> answer repair + guardrails
+  -> final dashboard response
+```
 
-Variables d'environnement principales:
+The assistant uses:
+
+- `sentence-transformers/all-MiniLM-L6-v2` for lightweight embeddings;
+- Chroma for local vector retrieval;
+- Ollama for local generation;
+- dashboard-state grounding for exact metrics;
+- response policies to constrain each answer type;
+- guardrails against hallucinated numbers, VaR/ES confusion, and financial advice.
+
+See:
+
+- [Global architecture](docs/ARCHITECTURE.md)
+- [Detailed chatbot architecture](docs/CHATBOT_ARCHITECTURE.md)
+- [Chatbot diagrams](docs/CHATBOT_DIAGRAMS.md)
+- [LaTeX chatbot diagrams](docs/CHATBOT_DIAGRAMS.tex)
+
+## Configuration
+
+Useful environment variables:
 
 ```text
 LLM_BACKEND=ollama
@@ -95,64 +169,43 @@ RAG_LOCAL_FILES_ONLY=true
 WARM_RAG_ON_STARTUP=true
 ```
 
-Le mode RAG `chroma` est le mode par defaut. Il utilise la base vectorielle locale generee dans `app/backend/chatbot/rag/vector_db/`. Cette base est un artefact local ignore par Git; il faut la reconstruire apres un clone ou apres modification des documents RAG.
+The vector database is generated locally under `app/backend/chatbot/rag/vector_db/` and is ignored by Git. Rebuild it after cloning or after editing the RAG documents.
 
-Avec `WARM_RAG_ON_STARTUP=true`, FastAPI precharge le modele d'embedding et la base Chroma au demarrage. Le startup peut prendre un peu plus de temps, mais le premier message chatbot evite le cold start du retrieval. Avec `RAG_LOCAL_FILES_ONLY=true`, le runtime utilise le modele deja telecharge localement et n'appelle pas Hugging Face pendant le warmup.
+## ML Workflows
 
-```powershell
-cd app
-..\.venv\Scripts\python.exe -m backend.chatbot.rag.build_index
-```
-
-Si tu veux lancer Ollama manuellement:
+From `app/`:
 
 ```powershell
-ollama serve
-```
-
-Pour desactiver le demarrage automatique par l'API:
-
-```powershell
-$env:AUTO_START_OLLAMA="false"
-```
-
-## Workflows ML
-
-Depuis `app/`:
-
-```powershell
-# Pipeline complet: donnees, validation, entrainement/inference, rapport et plots
+# Full workflow: data, validation, training/inference, report, plots
 ..\.venv\Scripts\python.exe .\jobs\run_full_masi_pipeline.py
 
-# Reutiliser les artefacts existants et regenerer les sorties
+# Reuse existing artifacts and regenerate outputs
 ..\.venv\Scripts\python.exe .\jobs\run_full_masi_pipeline.py --no-train
 
-# Pipeline de prevision uniquement
+# Forecast pipeline only
 ..\.venv\Scripts\python.exe .\jobs\run_forecast_pipeline.py --no-train
 
-# Rafraichir les rapports de validation
+# Refresh validation reports
 ..\.venv\Scripts\python.exe .\jobs\run_validation_report_pipeline.py
 ```
 
 ## Tests
 
-Depuis `app/`:
+From `app/`:
 
 ```powershell
 ..\.venv\Scripts\python.exe -m pytest tests/ -v --tb=short
 ```
 
-## Documentation projet
+## Related Repositories
 
-- [Architecture globale](docs/ARCHITECTURE.md)
-- [Architecture detaillee du chatbot](docs/CHATBOT_ARCHITECTURE.md)
-- [Diagrammes du systeme chatbot](docs/CHATBOT_DIAGRAMS.md)
-- [Diagrammes chatbot en LaTeX](docs/CHATBOT_DIAGRAMS.tex)
+- Research notebooks: https://github.com/mohamedzayd-elfahime/masi-risk-research-notebooks
+- Chatbot architecture reference: https://github.com/mohamedzayd-elfahime/market-risk-rag-chatbot
 
-## Notes de publication
+## Publication Notes
 
-Le depot ignore les environnements virtuels, caches Python, sorties temporaires, bases vectorielles locales, donnees de recherche generees et notebooks experimentaux. Les chemins locaux de developpement ne sont pas requis pour lancer l'application.
+This repository intentionally includes trained artifacts and minimal runtime files so the dashboard can be launched locally without retraining. Generated caches, virtual environments, logs, local vector databases, and experimental notebooks are excluded.
 
-## Licence
+## License
 
 MIT.

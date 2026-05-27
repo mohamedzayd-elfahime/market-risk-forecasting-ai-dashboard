@@ -33,6 +33,7 @@ research/data/raw/*
 research/data/interim/*
 research/data/processed/*
 research/data/external/*
+research/notebooks/
 research/notebooks/**/*.ipynb
 !research/data/raw/.gitkeep
 !research/data/interim/.gitkeep
